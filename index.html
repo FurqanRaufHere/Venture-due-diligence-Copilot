@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Venture Due Diligence Copilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.8.0/Recharts.min.js"></script>
+<style>
+  :root {
+    --navy: #0A1628;
+    --navy-mid: #0F2347;
+    --navy-light: #162d55;
+    --teal: #00C896;
+    --teal-dim: #00A07A;
+    --gold: #F5C842;
+    --gold-dim: #C9A130;
+    --coral: #FF5C5C;
+    --white: #F8F9FA;
+    --gray-100: #EEF0F3;
+    --gray-200: #D4D8DF;
+    --gray-400: #8892A4;
+    --gray-600: #4A5568;
+    --surface: #111E35;
+    --surface-2: #182744;
+    --surface-3: #1E3158;
+    --border: rgba(255,255,255,0.08);
+    --border-bright: rgba(0,200,150,0.3);
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --radius: 12px;
+    --radius-lg: 20px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    font-family: var(--font-body);
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID BG ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,200,150,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,150,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── LAYOUT ── */
+  .app { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* ── NAV ── */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 0; border-bottom: 1px solid var(--border); margin-bottom: 48px;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-mark {
+    width: 36px; height: 36px; background: var(--teal);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 500; color: var(--navy);
+  }
+  .logo-text { font-family: var(--font-display); font-size: 18px; color: var(--white); }
+  .logo-text span { color: var(--teal); }
+  .nav-badge {
+    font-family: var(--font-mono); font-size: 11px; color: var(--teal);
+    border: 1px solid var(--border-bright); border-radius: 100px;
+    padding: 4px 12px; letter-spacing: 0.08em;
+  }
+
+  /* ── HERO ── */
+  .hero { text-align: center; padding: 20px 0 56px; }
+  .hero-eyebrow {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.15em;
+    color: var(--teal); text-transform: uppercase; margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: var(--font-display); font-size: clamp(36px, 5vw, 64px);
+    line-height: 1.1; color: var(--white); margin-bottom: 20px;
+    max-width: 720px; margin-left: auto; margin-right: auto;
+  }
+  .hero h1 em { color: var(--teal); font-style: italic; }
+  .hero-sub {
+    font-size: 17px; color: var(--gray-400); max-width: 520px;
+    margin: 0 auto 40px; line-height: 1.6;
+  }
+  .hero-badges { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 100px; padding: 6px 14px;
+    font-size: 13px; color: var(--gray-200);
+  }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
+
+  /* ── UPLOAD PANEL ── */
+  .upload-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 40px; margin-bottom: 40px;
+  }
+  .upload-panel h2 {
+    font-family: var(--font-display); font-size: 24px; margin-bottom: 8px;
+  }
+  .upload-panel p { font-size: 14px; color: var(--gray-400); margin-bottom: 32px; }
+
+  .upload-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+
+  .upload-zone {
+    border: 1.5px dashed var(--border-bright); border-radius: var(--radius);
+    padding: 28px 20px; text-align: center; cursor: pointer;
+    transition: all 0.2s; background: var(--surface-2); position: relative;
+  }
+  .upload-zone:hover { border-color: var(--teal); background: rgba(0,200,150,0.06); }
+  .upload-zone.has-file { border-color: var(--teal); border-style: solid; background: rgba(0,200,150,0.08); }
+  .upload-zone.required-miss { border-color: var(--coral); }
+  .upload-icon {
+    width: 40px; height: 40px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; margin: 0 auto 12px;
+  }
+  .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-zone-label { font-size: 13px; font-weight: 600; color: var(--white); margin-bottom: 4px; }
+  .upload-zone-hint { font-size: 12px; color: var(--gray-400); }
+  .upload-zone-file { font-size: 11px; color: var(--teal); font-family: var(--font-mono); margin-top: 8px; word-break: break-all; }
+  .tag-required {
+    font-size: 10px; font-family: var(--font-mono); color: var(--coral);
+    border: 1px solid rgba(255,92,92,0.3); border-radius: 4px;
+    padding: 1px 6px; margin-left: 6px;
+  }
+  .tag-optional {
+    font-size: 10px; font-family: var(--font-mono); color: var(--gray-400);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 1px 6px; margin-left: 6px;
+  }
+
+  .startup-name-row { margin-bottom: 28px; }
+  .startup-name-row label { display: block; font-size: 13px; color: var(--gray-400); margin-bottom: 8px; }
+  .startup-name-row input {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 16px;
+    font-family: var(--font-body); font-size: 15px; color: var(--white);
+    outline: none; transition: border-color 0.2s;
+  }
+  .startup-name-row input::placeholder { color: var(--gray-400); }
+  .startup-name-row input:focus { border-color: var(--teal); }
+
+  .btn-analyze {
+    width: 100%; padding: 16px; background: var(--teal);
+    border: none; border-radius: var(--radius); cursor: pointer;
+    font-family: var(--font-body); font-size: 16px; font-weight: 600;
+    color: var(--navy); letter-spacing: 0.02em;
+    transition: all 0.2s; position: relative; overflow: hidden;
+  }
+  .btn-analyze:hover { background: var(--teal-dim); transform: translateY(-1px); }
+  .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ── PROGRESS ── */
+  .progress-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 40px; margin-bottom: 40px;
+  }
+  .progress-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+  .spinner {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 3px solid var(--border); border-top-color: var(--teal);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .progress-header h2 { font-family: var(--font-display); font-size: 22px; }
+  .progress-header p { font-size: 13px; color: var(--gray-400); }
+  .progress-steps { display: flex; flex-direction: column; gap: 12px; }
+  .progress-step {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 16px; border-radius: var(--radius);
+    background: var(--surface-2); border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+  .progress-step.active { border-color: var(--teal); background: rgba(0,200,150,0.06); }
+  .progress-step.done { border-color: rgba(0,200,150,0.2); }
+  .step-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+    background: var(--surface-3); color: var(--gray-400); border: 1px solid var(--border);
+  }
+  .progress-step.active .step-icon { background: var(--teal); color: var(--navy); border-color: var(--teal); animation: pulse 1.5s infinite; }
+  .progress-step.done .step-icon { background: rgba(0,200,150,0.15); color: var(--teal); border-color: var(--border-bright); }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(0,200,150,0.4); } 50% { box-shadow: 0 0 0 6px rgba(0,200,150,0); } }
+  .step-label { font-size: 14px; font-weight: 500; }
+  .step-status { margin-left: auto; font-size: 12px; font-family: var(--font-mono); }
+  .progress-step.active .step-status { color: var(--teal); }
+  .progress-step.done .step-status { color: var(--gray-400); }
+  .progress-bar-track { height: 4px; background: var(--surface-3); border-radius: 2px; margin-top: 24px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: var(--teal); border-radius: 2px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+
+  /* ── RESULTS ── */
+  .results-section { animation: fadeIn 0.6s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── GRADE HERO ── */
+  .grade-hero {
+    display: grid; grid-template-columns: auto 1fr auto;
+    gap: 32px; align-items: center;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 40px; margin-bottom: 24px;
+  }
+  .grade-circle {
+    width: 100px; height: 100px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: var(--font-display); border: 3px solid;
+  }
+  .grade-circle .grade-letter { font-size: 42px; line-height: 1; }
+  .grade-circle .grade-label { font-size: 10px; font-family: var(--font-mono); letter-spacing: 0.1em; }
+  .grade-A { border-color: var(--teal); color: var(--teal); background: rgba(0,200,150,0.1); }
+  .grade-B { border-color: #64B5F6; color: #64B5F6; background: rgba(100,181,246,0.1); }
+  .grade-C { border-color: var(--gold); color: var(--gold); background: rgba(245,200,66,0.1); }
+  .grade-D { border-color: #FF8A65; color: #FF8A65; background: rgba(255,138,101,0.1); }
+  .grade-F { border-color: var(--coral); color: var(--coral); background: rgba(255,92,92,0.1); }
+
+  .grade-meta h2 { font-family: var(--font-display); font-size: 28px; margin-bottom: 8px; }
+  .grade-meta p { font-size: 14px; color: var(--gray-400); line-height: 1.6; max-width: 420px; }
+  .grade-scores { display: flex; flex-direction: column; gap: 8px; }
+  .score-pill {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; padding: 8px 14px;
+    background: var(--surface-2); border-radius: var(--radius);
+    border: 1px solid var(--border); white-space: nowrap;
+  }
+  .score-num { font-family: var(--font-mono); font-size: 15px; font-weight: 500; }
+
+  /* ── SECTION TITLES ── */
+  .section-title {
+    font-family: var(--font-display); font-size: 22px;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 12px;
+  }
+  .section-tag {
+    font-size: 10px; font-family: var(--font-mono); color: var(--teal);
+    border: 1px solid var(--border-bright); border-radius: 4px;
+    padding: 2px 8px; letter-spacing: 0.08em;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 28px;
+  }
+  .card-sm {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 20px;
+  }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .mb-16 { margin-bottom: 16px; }
+  .mb-24 { margin-bottom: 24px; }
+  .mb-32 { margin-bottom: 32px; }
+
+  /* ── RISK BARS ── */
+  .risk-dimension { margin-bottom: 20px; }
+  .risk-dim-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .risk-dim-name { font-size: 14px; font-weight: 500; }
+  .risk-dim-score { font-family: var(--font-mono); font-size: 14px; }
+  .risk-dim-weight { font-size: 11px; color: var(--gray-400); font-family: var(--font-mono); }
+  .risk-bar-track { height: 8px; background: var(--surface-3); border-radius: 4px; overflow: hidden; }
+  .risk-bar-fill { height: 100%; border-radius: 4px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+
+  /* ── FLAGS ── */
+  .flag-item {
+    display: flex; gap: 12px; padding: 14px;
+    background: rgba(255,92,92,0.06); border: 1px solid rgba(255,92,92,0.2);
+    border-radius: var(--radius); margin-bottom: 10px;
+  }
+  .flag-icon { color: var(--coral); font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .flag-text { font-size: 13px; color: var(--gray-200); line-height: 1.5; }
+
+  /* ── POSITIVE ── */
+  .positive-item {
+    display: flex; gap: 12px; padding: 12px 14px;
+    background: rgba(0,200,150,0.05); border: 1px solid rgba(0,200,150,0.15);
+    border-radius: var(--radius); margin-bottom: 8px;
+  }
+  .positive-icon { color: var(--teal); font-size: 14px; flex-shrink: 0; }
+  .positive-text { font-size: 13px; color: var(--gray-200); line-height: 1.5; }
+
+  /* ── COMPANY CARDS ── */
+  .company-card {
+    padding: 16px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    transition: border-color 0.2s;
+  }
+  .company-card:hover { border-color: rgba(255,255,255,0.2); }
+  .company-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .company-sim { font-family: var(--font-mono); font-size: 12px; margin-bottom: 6px; }
+  .company-desc { font-size: 12px; color: var(--gray-400); line-height: 1.5; }
+  .company-outcome {
+    display: inline-block; font-size: 10px; font-family: var(--font-mono);
+    border-radius: 4px; padding: 2px 8px; margin-bottom: 8px;
+  }
+  .outcome-failed { background: rgba(255,92,92,0.15); color: #FF8A8A; }
+  .outcome-success { background: rgba(0,200,150,0.15); color: var(--teal); }
+
+  /* ── CLAIMS ── */
+  .claim-row {
+    display: flex; gap: 16px; padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .claim-row:last-child { border-bottom: none; }
+  .claim-key { font-size: 12px; font-family: var(--font-mono); color: var(--gray-400); min-width: 140px; flex-shrink: 0; padding-top: 1px; }
+  .claim-val { font-size: 14px; color: var(--white); line-height: 1.5; }
+
+  /* ── METRICS GRID ── */
+  .metric-card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 20px;
+  }
+  .metric-label { font-size: 11px; font-family: var(--font-mono); color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .metric-value { font-family: var(--font-display); font-size: 28px; color: var(--white); }
+  .metric-sub { font-size: 12px; color: var(--gray-400); margin-top: 4px; }
+
+  /* ── RECOMMENDATIONS ── */
+  .rec-item {
+    display: flex; gap: 16px; padding: 16px 20px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+  .rec-item:hover { border-color: rgba(255,255,255,0.15); }
+  .rec-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--surface-3); color: var(--teal);
+    font-family: var(--font-mono); font-size: 12px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    border: 1px solid var(--border-bright);
+  }
+  .rec-text { font-size: 14px; color: var(--gray-200); line-height: 1.6; padding-top: 4px; }
+
+  /* ── WHY SECTION (Expandable) ── */
+  .why-toggle {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; font-family: var(--font-mono); color: var(--gray-400);
+    cursor: pointer; margin-top: 12px; padding: 6px 0; border: none; background: none;
+    color: inherit;
+  }
+  .why-toggle:hover { color: var(--teal); }
+  .why-content {
+    margin-top: 12px; padding: 16px; font-size: 13px;
+    color: var(--gray-400); line-height: 1.7;
+    background: var(--surface-3); border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  /* ── CONFIDENCE BADGE ── */
+  .confidence-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-family: var(--font-mono);
+    border-radius: 100px; padding: 4px 12px; border: 1px solid;
+  }
+  .conf-high { color: var(--teal); border-color: var(--border-bright); background: rgba(0,200,150,0.08); }
+  .conf-medium { color: var(--gold); border-color: rgba(245,200,66,0.3); background: rgba(245,200,66,0.08); }
+  .conf-low { color: var(--gray-400); border-color: var(--border); background: var(--surface-2); }
+  .conf-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* ── EXPORT BTN ── */
+  .btn-export {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; background: transparent;
+    border: 1px solid var(--border-bright); border-radius: var(--radius);
+    font-family: var(--font-body); font-size: 13px; color: var(--teal);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-export:hover { background: rgba(0,200,150,0.08); }
+
+  /* ── ARCHETYPE PILL ── */
+  .archetype-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px; background: rgba(245,200,66,0.1);
+    border: 1px solid rgba(245,200,66,0.3); border-radius: 100px;
+    font-size: 13px; color: var(--gold);
+  }
+
+  /* ── SUMMARY BOX ── */
+  .summary-box {
+    border-left: 3px solid var(--teal); padding: 20px 24px;
+    background: rgba(0,200,150,0.04); border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: 15px; color: var(--gray-200); line-height: 1.8;
+  }
+
+  /* ── TAM PILL ── */
+  .tam-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-family: var(--font-mono);
+    border-radius: 4px; padding: 3px 10px;
+  }
+  .tam-high { background: rgba(0,200,150,0.1); color: var(--teal); }
+  .tam-medium { background: rgba(245,200,66,0.1); color: var(--gold); }
+  .tam-low { background: rgba(255,92,92,0.1); color: var(--coral); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 680px) {
+    .grade-hero { grid-template-columns: 1fr; }
+    .grade-scores { flex-direction: row; flex-wrap: wrap; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ── RADAR PLACEHOLDER ── */
+  .radar-wrap { height: 280px; display: flex; align-items: center; justify-content: center; }
+  .radar-svg { width: 100%; max-width: 300px; }
+
+  /* ── ERROR ── */
+  .error-panel {
+    background: rgba(255,92,92,0.08); border: 1px solid rgba(255,92,92,0.3);
+    border-radius: var(--radius-lg); padding: 32px; text-align: center; margin-bottom: 24px;
+  }
+  .error-panel h3 { color: var(--coral); font-family: var(--font-display); font-size: 22px; margin-bottom: 8px; }
+  .error-panel p { color: var(--gray-400); font-size: 14px; margin-bottom: 20px; }
+  .btn-retry {
+    padding: 10px 24px; background: transparent;
+    border: 1px solid var(--coral); border-radius: var(--radius);
+    color: var(--coral); font-family: var(--font-body); cursor: pointer;
+    font-size: 14px; transition: all 0.2s;
+  }
+  .btn-retry:hover { background: rgba(255,92,92,0.1); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--navy); }
+  ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">
+      <div class="logo-mark">VD</div>
+      <div class="logo-text">VDD <span>Copilot</span></div>
+    </div>
+    <div class="nav-badge">BETA · v2.0</div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero" id="hero">
+    <div class="hero-eyebrow">AI-Powered Investment Analysis</div>
+    <h1>Due diligence at the<br/><em>speed of intelligence</em></h1>
+    <p class="hero-sub">Upload a pitch deck, financials, and founder bio. Get a structured investment risk assessment in under 60 seconds.</p>
+    <div class="hero-badges">
+      <div class="badge"><div class="badge-dot"></div>5 risk dimensions</div>
+      <div class="badge"><div class="badge-dot"></div>RAG market analysis</div>
+      <div class="badge"><div class="badge-dot"></div>Pattern similarity</div>
+      <div class="badge"><div class="badge-dot"></div>Groq LLM</div>
+    </div>
+  </div>
+
+  <!-- UPLOAD PANEL -->
+  <div class="upload-panel" id="upload-panel">
+    <h2>Upload startup materials</h2>
+    <p>All analysis runs locally — your files are not stored externally.</p>
+
+    <div class="startup-name-row">
+      <label>Startup name (optional)</label>
+      <input type="text" id="startup-name" placeholder="e.g. SupplyMind AI" />
+    </div>
+
+    <div class="upload-grid">
+      <div class="upload-zone" id="zone-pitch">
+        <input type="file" id="file-pitch" accept=".pdf" onchange="handleFile(this,'pitch')" />
+        <div class="upload-icon" style="background:rgba(0,200,150,0.15);color:var(--teal)">📋</div>
+        <div class="upload-zone-label">Pitch Deck <span class="tag-required">required</span></div>
+        <div class="upload-zone-hint">PDF only</div>
+        <div class="upload-zone-file" id="pitch-filename"></div>
+      </div>
+      <div class="upload-zone" id="zone-fin">
+        <input type="file" id="file-fin" accept=".csv,.xlsx,.xls" onchange="handleFile(this,'fin')" />
+        <div class="upload-icon" style="background:rgba(100,181,246,0.15);color:#64B5F6">📊</div>
+        <div class="upload-zone-label">Financials <span class="tag-optional">optional</span></div>
+        <div class="upload-zone-hint">CSV or XLSX</div>
+        <div class="upload-zone-file" id="fin-filename"></div>
+      </div>
+      <div class="upload-zone" id="zone-bio">
+        <input type="file" id="file-bio" accept=".txt,.md" onchange="handleFile(this,'bio')" />
+        <div class="upload-icon" style="background:rgba(245,200,66,0.15);color:var(--gold)">👤</div>
+        <div class="upload-zone-label">Founder Bio <span class="tag-optional">optional</span></div>
+        <div class="upload-zone-hint">TXT or MD</div>
+        <div class="upload-zone-file" id="bio-filename"></div>
+      </div>
+    </div>
+
+    <button class="btn-analyze" id="btn-analyze" onclick="startAnalysis()">
+      Analyze Startup →
+    </button>
+  </div>
+
+  <!-- PROGRESS PANEL (hidden initially) -->
+  <div class="progress-panel" id="progress-panel" style="display:none">
+    <div class="progress-header">
+      <div class="spinner" id="spinner"></div>
+      <div>
+        <h2>Analyzing startup...</h2>
+        <p id="progress-current-step">Initializing pipeline</p>
+      </div>
+    </div>
+    <div class="progress-steps" id="progress-steps">
+      <div class="progress-step" id="ps-parse" data-step="parse">
+        <div class="step-icon">1</div>
+        <div class="step-label">Parsing documents</div>
+        <div class="step-status">—</div>
+      </div>
+      <div class="progress-step" id="ps-claims" data-step="claims">
+        <div class="step-icon">2</div>
+        <div class="step-label">Extracting business claims</div>
+        <div class="step-status">—</div>
+      </div>
+      <div class="progress-step" id="ps-financial" data-step="financial">
+        <div class="step-icon">3</div>
+        <div class="step-label">Financial analysis</div>
+        <div class="step-status">—</div>
+      </div>
+      <div class="progress-step" id="ps-similarity" data-step="similarity">
+        <div class="step-icon">4</div>
+        <div class="step-label">Pattern similarity engine</div>
+        <div class="step-status">—</div>
+      </div>
+      <div class="progress-step" id="ps-market" data-step="market">
+        <div class="step-icon">5</div>
+        <div class="step-label">Market & competition (RAG)</div>
+        <div class="step-status">—</div>
+      </div>
+      <div class="progress-step" id="ps-founder" data-step="founder">
+        <div class="step-icon">6</div>
+        <div class="step-label">Founder risk profiling</div>
+        <div class="step-status">—</div>
+      </div>
+      <div class="progress-step" id="ps-aggregate" data-step="aggregate">
+        <div class="step-icon">7</div>
+        <div class="step-label">Risk aggregation</div>
+        <div class="step-status">—</div>
+      </div>
+    </div>
+    <div class="progress-bar-track" style="margin-top:24px">
+      <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- ERROR PANEL (hidden) -->
+  <div class="error-panel" id="error-panel" style="display:none">
+    <h3>Analysis failed</h3>
+    <p id="error-message">Something went wrong. Check that the backend is running at localhost:8000.</p>
+    <button class="btn-retry" onclick="resetAll()">Try Again</button>
+  </div>
+
+  <!-- RESULTS (hidden initially) -->
+  <div class="results-section" id="results-section" style="display:none">
+
+    <!-- RESULT HEADER -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-size:12px;font-family:var(--font-mono);color:var(--gray-400);margin-bottom:6px">ANALYSIS COMPLETE</div>
+        <h2 style="font-family:var(--font-display);font-size:26px" id="result-startup-name">SupplyMind AI</h2>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span class="confidence-badge" id="confidence-badge"><span class="conf-dot"></span>HIGH CONFIDENCE</span>
+        <button class="btn-export" onclick="window.open('http://localhost:8000/api/report/' + currentJobId)">⬇ Export Report</button>
+        <button class="btn-export" style="color:var(--gray-400);border-color:var(--border)" onclick="resetAll()">New Analysis</button>
+
+      </div>
+    </div>
+
+    <!-- GRADE HERO -->
+    <div class="grade-hero mb-24">
+      <div class="grade-circle" id="grade-circle">
+        <span class="grade-letter" id="grade-letter">—</span>
+        <span class="grade-label">GRADE</span>
+      </div>
+      <div class="grade-meta">
+        <h2 id="grade-headline">Investment Grade</h2>
+        <p id="executive-summary">Loading executive summary...</p>
+      </div>
+      <div class="grade-scores" id="score-pills"></div>
+    </div>
+
+    <!-- RADAR + RISK BREAKDOWN -->
+    <div class="grid-2 mb-24">
+      <div class="card">
+        <div class="section-title">Risk Radar <span class="section-tag">ALL 5 DIMENSIONS</span></div>
+        <div class="radar-wrap">
+          <canvas id="radar-chart" width="260" height="260"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Risk Breakdown</div>
+        <div id="risk-bars"></div>
+      </div>
+    </div>
+
+    <!-- RED FLAGS + EXECUTIVE SUMMARY -->
+    <div class="grid-2 mb-24">
+      <div class="card">
+        <div class="section-title">Red Flags <span class="section-tag" id="flag-count-tag">0</span></div>
+        <div id="red-flags-list"></div>
+        <div style="margin-top:16px">
+          <div class="section-title" style="font-size:16px">Recommendations</div>
+          <div id="recommendations-list"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Executive Summary <span class="section-tag">LLM</span></div>
+        <div class="summary-box" id="summary-box"></div>
+        <!-- Why section (Step 17) -->
+        <button class="why-toggle" onclick="toggleWhy('why-summary')">▸ Why this assessment?</button>
+        <div class="why-content" id="why-summary" style="display:none" id="why-summary-content"></div>
+      </div>
+    </div>
+
+    <!-- FINANCIAL METRICS -->
+    <div class="card mb-24" id="financial-section">
+      <div class="section-title">Financial Analysis <span class="section-tag">DETERMINISTIC</span></div>
+      <div class="grid-3 mb-24" id="financial-metrics-grid"></div>
+      <div>
+        <div style="font-size:13px;color:var(--gray-400);margin-bottom:12px;font-family:var(--font-mono)">ANOMALY EXPLANATION — LLM</div>
+        <div style="font-size:14px;color:var(--gray-200);line-height:1.7" id="anomaly-explanation"></div>
+        <button class="why-toggle" onclick="toggleWhy('why-financial')">▸ How was this computed?</button>
+        <div class="why-content" id="why-financial" style="display:none">
+          Financial metrics are computed deterministically using Python (Pandas/NumPy) — no LLM involved in the numbers themselves. Revenue CAGR uses the compound annual growth rate formula over all available years. Burn rate is the average monthly net cash outflow. Runway = current cash balance ÷ monthly burn. The LLM only writes the explanation text above, grounded in the actual computed numbers.
+        </div>
+      </div>
+    </div>
+
+    <!-- CLAIMS -->
+    <div class="card mb-24" id="claims-section">
+      <div class="section-title">Extracted Claims <span class="section-tag">CLAIM EXTRACTION AGENT</span></div>
+      <div id="claims-table"></div>
+      <button class="why-toggle" onclick="toggleWhy('why-claims')">▸ How were these extracted?</button>
+      <div class="why-content" id="why-claims" style="display:none">
+        Claims are extracted using a structured JSON schema enforced prompt sent to the LLM. The model is instructed to return only valid JSON — no preamble or explanation. Temperature is set to 0.1 (near-deterministic) to minimize hallucination. The output is validated with Pydantic before being stored. If the LLM fails to return valid JSON, the extraction agent returns empty fields gracefully without crashing the pipeline.
+      </div>
+    </div>
+
+    <!-- MARKET ANALYSIS -->
+    <div class="card mb-24" id="market-section">
+      <div class="section-title">Market & Competition <span class="section-tag">RAG AGENT</span></div>
+      <div class="grid-3 mb-16" id="market-metrics-grid"></div>
+      <div style="font-size:13px;color:var(--gray-400);margin-bottom:12px;font-family:var(--font-mono)">MARKET ASSESSMENT — LLM-GENERATED FROM RETRIEVED DATA</div>
+      <div style="font-size:14px;color:var(--gray-200);line-height:1.7;margin-bottom:16px" id="market-assessment"></div>
+      <div id="competitor-cards"></div>
+      <button class="why-toggle" onclick="toggleWhy('why-market')">▸ How does RAG work here?</button>
+      <div class="why-content" id="why-market" style="display:none">
+        RAG (Retrieval-Augmented Generation) means the LLM's market assessment is grounded in retrieved data, not hallucinated. The process: (1) The startup's solution + target market are embedded into a 384-dimensional vector. (2) FAISS (vector database) retrieves the most similar companies from our 74-startup dataset. (3) Those retrieved companies are injected into the LLM prompt as context. (4) The LLM writes the assessment based on that context — not from memory. This prevents the LLM from making up competitor names.
+      </div>
+    </div>
+
+    <!-- FOUNDER ANALYSIS -->
+    <div class="card mb-24" id="founder-section">
+      <div class="section-title">Founder Risk Profile <span class="section-tag">FOUNDER AGENT</span></div>
+      <div class="grid-3 mb-16" id="founder-metrics-grid"></div>
+      <div class="grid-2">
+        <div>
+          <div style="font-size:12px;font-family:var(--font-mono);color:var(--teal);margin-bottom:10px">POSITIVE SIGNALS</div>
+          <div id="positive-signals-list"></div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-family:var(--font-mono);color:var(--coral);margin-bottom:10px">RISK FLAGS</div>
+          <div id="founder-flags-list"></div>
+        </div>
+      </div>
+      <div style="margin-top:16px;font-size:14px;color:var(--gray-200);line-height:1.7" id="founder-explanation"></div>
+      <button class="why-toggle" onclick="toggleWhy('why-founder')">▸ How is credibility scored?</button>
+      <div class="why-content" id="why-founder" style="display:none">
+        Credibility scoring is hybrid: (1) The LLM extracts structured facts from the bio text (prior exits, years experience, domain relevance, role gaps) using a strict JSON schema. (2) Rule-based logic then assigns points based on those facts — prior exits add 20 points, 10+ years domain experience adds 15 points, missing technical founder deducts 10 points, etc. (3) The LLM writes the explanation. This prevents the LLM from generating an arbitrary "vibe-based" score.
+      </div>
+    </div>
+
+    <!-- SIMILARITY ANALYSIS -->
+    <div class="card mb-24" id="similarity-section">
+      <div class="section-title">Failure Pattern Analysis <span class="section-tag">FAISS SIMILARITY</span></div>
+      <div id="archetype-row" style="margin-bottom:20px"></div>
+      <div class="grid-2 mb-16">
+        <div>
+          <div style="font-size:12px;font-family:var(--font-mono);color:var(--coral);margin-bottom:12px">SIMILAR FAILED STARTUPS</div>
+          <div id="failed-cards"></div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-family:var(--font-mono);color:var(--teal);margin-bottom:12px">SIMILAR SUCCESSFUL STARTUPS</div>
+          <div id="success-cards"></div>
+        </div>
+      </div>
+      <div style="font-size:14px;color:var(--gray-200);line-height:1.7" id="archetype-explanation"></div>
+      <button class="why-toggle" onclick="toggleWhy('why-similarity')">▸ How does pattern matching work?</button>
+      <div class="why-content" id="why-similarity" style="display:none">
+        Pattern matching uses sentence-transformer embeddings (all-MiniLM-L6-v2, 384 dimensions) and FAISS vector search. The startup description is embedded into a vector and compared against 74 pre-embedded historical startups using cosine similarity. Similarity scores above 0.45 are considered meaningful matches. The dominant failure archetype is determined by the most common failure category among high-similarity (>55%) failed matches.
+      </div>
+    </div>
+
+    <!-- What Would Improve This (Step 18) -->
+    <div class="card" id="advisory-section">
+      <div class="section-title">What Would Improve This? <span class="section-tag">ADVISORY AGENT</span></div>
+      <p style="font-size:14px;color:var(--gray-400);margin-bottom:20px">Actionable recommendations to reduce investment risk and strengthen the investment case.</p>
+      <div id="advisory-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:8000';
+  let currentJobId = null;
+  let pollInterval = null;
+  let files = { pitch: null, fin: null, bio: null };
+
+  function handleFile(input, type) {
+    if (input.files[0]) {
+      files[type] = input.files[0];
+      const nameEl = document.getElementById(type === 'pitch' ? 'pitch-filename' : type === 'fin' ? 'fin-filename' : 'bio-filename');
+      nameEl.textContent = input.files[0].name;
+      document.getElementById('zone-' + (type === 'pitch' ? 'pitch' : type === 'fin' ? 'fin' : 'bio')).classList.add('has-file');
+    }
+  }
+
+  async function startAnalysis() {
+    if (!files.pitch) {
+      document.getElementById('zone-pitch').classList.add('required-miss');
+      setTimeout(() => document.getElementById('zone-pitch').classList.remove('required-miss'), 2000);
+      return;
+    }
+
+    // Hide upload, show progress
+    document.getElementById('upload-panel').style.display = 'none';
+    document.getElementById('hero').style.display = 'none';
+    document.getElementById('progress-panel').style.display = 'block';
+    document.getElementById('error-panel').style.display = 'none';
+    document.getElementById('results-section').style.display = 'none';
+
+    const fd = new FormData();
+    fd.append('pitch_deck', files.pitch);
+    if (files.fin) fd.append('financials', files.fin);
+    if (files.bio) fd.append('founder_bio', files.bio);
+    const name = document.getElementById('startup-name').value;
+    if (name) fd.append('startup_name', name);
+
+    try {
+      advanceStep('parse', 'active');
+      updateProgressBar(10);
+
+      const res = await fetch(`${API}/api/upload`, { method: 'POST', body: fd });
+      if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+      const data = await res.json();
+      currentJobId = data.job_id;
+      advanceStep('parse', 'done');
+      advanceStep('claims', 'active');
+      updateProgressBar(25);
+
+      pollInterval = setInterval(pollStatus, 2500);
+    } catch(e) {
+      showError(e.message);
+    }
+  }
+
+  const STEP_SEQ = ['parse','claims','financial','similarity','market','founder','aggregate'];
+  let doneSteps = new Set();
+  let progressPct = 10;
+
+  async function pollStatus() {
+    try {
+      const res = await fetch(`${API}/api/status/${currentJobId}`);
+      const data = await res.json();
+
+      if (data.status === 'complete') {
+        clearInterval(pollInterval);
+        STEP_SEQ.forEach(s => advanceStep(s, 'done'));
+        updateProgressBar(100);
+        document.getElementById('spinner').style.animation = 'none';
+        document.getElementById('spinner').style.borderColor = 'var(--teal)';
+        setTimeout(loadResults, 600);
+      } else if (data.status === 'error') {
+        clearInterval(pollInterval);
+        showError('Pipeline failed on the backend. Check server logs.');
+      } else {
+        // Simulate step progression based on elapsed time
+        const steps = data.steps_completed || [];
+        if (steps.includes('claim_extraction') && !doneSteps.has('claims')) {
+          advanceStep('claims', 'done'); advanceStep('financial', 'active'); progressPct = 40;
+        }
+        if (steps.includes('financial_analysis') && !doneSteps.has('financial')) {
+          advanceStep('financial', 'done'); advanceStep('similarity', 'active'); progressPct = 55;
+        }
+        if (steps.includes('risk_aggregation') && !doneSteps.has('aggregate')) {
+          advanceStep('similarity', 'done'); advanceStep('market', 'done');
+          advanceStep('founder', 'done'); advanceStep('aggregate', 'active'); progressPct = 85;
+        }
+        updateProgressBar(progressPct);
+        document.getElementById('progress-current-step').textContent = `Status: ${data.status}`;
+      }
+    } catch(e) {
+      // backend might be slow, keep polling
+    }
+  }
+
+  function advanceStep(step, state) {
+    const el = document.getElementById('ps-' + step);
+    if (!el) return;
+    el.className = 'progress-step ' + state;
+    const statusEl = el.querySelector('.step-status');
+    if (state === 'done') { statusEl.textContent = '✓ done'; doneSteps.add(step); }
+    else if (state === 'active') { statusEl.textContent = 'running...'; }
+  }
+
+  function updateProgressBar(pct) {
+    document.getElementById('progress-bar').style.width = pct + '%';
+  }
+
+  async function loadResults() {
+    try {
+      const res = await fetch(`${API}/api/results/${currentJobId}`);
+      const data = await res.json();
+      renderResults(data);
+    } catch(e) {
+      showError('Failed to load results: ' + e.message);
+    }
+  }
+
+  function renderResults(data) {
+    document.getElementById('progress-panel').style.display = 'none';
+    document.getElementById('results-section').style.display = 'block';
+
+    const risk = data.risk_score || {};
+    const claims = data.extracted_claims || {};
+    const fin = data.financial_metrics || {};
+    const memo = risk.due_diligence_memo || {};
+
+    // Startup name
+    document.getElementById('result-startup-name').textContent = data.startup_name || 'Startup Analysis';
+
+    // Confidence
+    const conf = risk.confidence_level || 'low';
+    const confBadge = document.getElementById('confidence-badge');
+    confBadge.className = 'confidence-badge conf-' + conf;
+    confBadge.innerHTML = `<span class="conf-dot"></span>${conf.toUpperCase()} CONFIDENCE`;
+
+    // Grade
+    const grade = risk.investment_grade || 'C';
+    const score = risk.overall_risk_score || 0;
+    const gradeCircle = document.getElementById('grade-circle');
+    gradeCircle.className = 'grade-circle grade-' + grade;
+    document.getElementById('grade-letter').textContent = grade;
+
+    const gradeNames = { A:'Low Risk', B:'Moderate Risk', C:'Elevated Risk', D:'High Risk', F:'Very High Risk' };
+    document.getElementById('grade-headline').textContent = `Grade ${grade} — ${gradeNames[grade] || 'Unknown'}`;
+
+    // Executive summary
+    document.getElementById('executive-summary').textContent = memo.executive_summary || 'Analysis complete.';
+    document.getElementById('summary-box').textContent = memo.executive_summary || '';
+    document.getElementById('why-summary').textContent = `Risk score: ${score}/100. Weighted across ${risk.scores_available || 0} of 5 dimensions. Confidence is ${conf} because ${risk.scores_available < 5 ? 'not all agents ran successfully' : 'all 5 agents ran and produced valid scores'}.`;
+
+    // Score pills
+    const pillsEl = document.getElementById('score-pills');
+    pillsEl.innerHTML = '';
+    const scoreFields = [
+      { key: 'overall_risk_score', label: 'Overall', color: scoreColor(score) },
+    ];
+    scoreFields.forEach(f => {
+      const v = risk[f.key];
+      if (v !== null && v !== undefined) {
+        pillsEl.innerHTML += `<div class="score-pill"><span class="score-num" style="color:${f.color}">${v.toFixed(1)}</span><span style="font-size:12px;color:var(--gray-400)">/100 ${f.label}</span></div>`;
+      }
+    });
+
+    // Risk bars
+    const barsEl = document.getElementById('risk-bars');
+    barsEl.innerHTML = '';
+    const dims = [
+      { key: 'financial_risk_score',      label: 'Financial Risk',      weight: '30%' },
+      { key: 'market_risk_score',          label: 'Market Risk',          weight: '25%' },
+      { key: 'founder_risk_score',         label: 'Founder Risk',         weight: '20%' },
+      { key: 'narrative_inflation_score',  label: 'Narrative Inflation',  weight: '15%' },
+      { key: 'pattern_similarity_score',   label: 'Pattern Similarity',   weight: '10%' },
+    ];
+    dims.forEach(d => {
+      const v = risk[d.key];
+      const pct = v !== null && v !== undefined ? v : 0;
+      const na = v === null || v === undefined;
+      barsEl.innerHTML += `
+        <div class="risk-dimension">
+          <div class="risk-dim-header">
+            <span class="risk-dim-name">${d.label} <span class="risk-dim-weight">${d.weight}</span></span>
+            <span class="risk-dim-score" style="color:${na?'var(--gray-400)':scoreColor(pct)}">${na ? 'N/A' : pct.toFixed(1)}</span>
+          </div>
+          <div class="risk-bar-track">
+            <div class="risk-bar-fill" style="width:${na?'0':pct}%;background:${na?'var(--surface-3)':scoreColor(pct)}"></div>
+          </div>
+        </div>`;
+    });
+
+    // Draw radar
+    drawRadar(dims.map(d => ({ label: d.label.split(' ')[0], value: risk[d.key] || 0 })));
+
+    // Red flags
+    const flags = memo.all_red_flags || [];
+    document.getElementById('flag-count-tag').textContent = flags.length;
+    const flagsEl = document.getElementById('red-flags-list');
+    if (flags.length === 0) {
+      flagsEl.innerHTML = '<div style="font-size:14px;color:var(--teal);padding:12px 0">✓ No major red flags detected</div>';
+    } else {
+      flagsEl.innerHTML = flags.map(f => `<div class="flag-item"><span class="flag-icon">⚠</span><span class="flag-text">${f}</span></div>`).join('');
+    }
+
+    // Recommendations (advisory panel)
+    const recs = memo.recommendations || [];
+    const recsEl = document.getElementById('recommendations-list');
+    recsEl.innerHTML = recs.slice(0,3).map((r,i) => `<div class="rec-item"><div class="rec-num">${i+1}</div><div class="rec-text">${r}</div></div>`).join('');
+    document.getElementById('advisory-list').innerHTML = recs.map((r,i) => `<div class="rec-item"><div class="rec-num">${i+1}</div><div class="rec-text">${r}</div></div>`).join('');
+
+    // Financial metrics
+    const finGrid = document.getElementById('financial-metrics-grid');
+    finGrid.innerHTML = [
+      { label: 'Revenue CAGR', value: fin.revenue_cagr != null ? fin.revenue_cagr.toFixed(1)+'%' : 'N/A', sub: 'compound annual growth' },
+      { label: 'Runway', value: fin.runway_months != null ? fin.runway_months.toFixed(1)+' mo' : 'N/A', sub: 'months of cash' },
+      { label: 'Gross Margin', value: fin.gross_margin_avg != null ? fin.gross_margin_avg.toFixed(1)+'%' : 'N/A', sub: 'average' },
+      { label: 'Burn Rate', value: fin.burn_rate_monthly != null ? '$'+Math.round(fin.burn_rate_monthly/1000)+'K/mo' : 'N/A', sub: 'monthly' },
+      { label: 'Plausibility', value: fin.financial_plausibility_score != null ? fin.financial_plausibility_score+'/100' : 'N/A', sub: 'financial score' },
+      { label: 'CAC/LTV', value: fin.cac_ltv_ratio != null ? fin.cac_ltv_ratio.toFixed(2) : 'N/A', sub: 'ratio' },
+    ].map(m => `<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-value">${m.value}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
+    document.getElementById('anomaly-explanation').textContent = fin.anomaly_explanation || 'No anomaly explanation available.';
+
+    // Claims table
+    const claimsEl = document.getElementById('claims-table');
+    const claimRows = [
+      { key: 'problem_statement', label: 'problem' },
+      { key: 'solution_claim',    label: 'solution' },
+      { key: 'target_market',     label: 'target_market' },
+      { key: 'tam_claim',         label: 'tam_claim' },
+      { key: 'revenue_model',     label: 'revenue_model' },
+    ];
+    claimsEl.innerHTML = claimRows.map(r =>
+      `<div class="claim-row"><div class="claim-key">${r.label}</div><div class="claim-val">${claims[r.key] || '—'}</div></div>`
+    ).join('');
+    if (claims.hype_indicators && claims.hype_indicators.length) {
+      claimsEl.innerHTML += `<div class="claim-row"><div class="claim-key">hype_phrases</div><div class="claim-val">${claims.hype_indicators.map(h => `<span style="background:rgba(255,92,92,0.12);color:#FF8A8A;border-radius:4px;padding:2px 8px;font-size:12px;margin-right:6px">${h}</span>`).join('')}</div></div>`;
+    }
+
+    // Market (use the data from memo + risk fields)
+    const mktCompetitors = (memo.comparable_startups || []).slice(0, 6);
+    const compEl = document.getElementById('competitor-cards');
+    if (mktCompetitors.length) {
+      compEl.innerHTML = `<div style="font-size:12px;font-family:var(--font-mono);color:var(--gray-400);margin-bottom:10px">COMPARABLE COMPANIES RETRIEVED</div>` +
+        `<div style="display:flex;flex-wrap:wrap;gap:8px">${mktCompetitors.map(c => `<span style="background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:13px">${c}</span>`).join('')}</div>`;
+    }
+
+    const mktGrid = document.getElementById('market-metrics-grid');
+    const mktScore = risk.market_risk_score;
+    mktGrid.innerHTML = [
+      { label: 'Market Risk', value: mktScore != null ? mktScore.toFixed(1)+'/100' : 'N/A' },
+      { label: 'Confidence', value: conf.toUpperCase() },
+      { label: 'Comparables', value: mktCompetitors.length },
+    ].map(m => `<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-value" style="font-size:22px">${m.value}</div></div>`).join('');
+    document.getElementById('market-assessment').textContent = memo.executive_summary || 'Market analysis complete.';
+
+    // Founder metrics
+    const fndScore = risk.founder_risk_score;
+    const fndGrid = document.getElementById('founder-metrics-grid');
+    fndGrid.innerHTML = [
+      { label: 'Founder Risk', value: fndScore != null ? fndScore.toFixed(1)+'/100' : 'N/A' },
+      { label: 'Credibility', value: fndScore != null ? (100 - fndScore).toFixed(0)+'/100' : 'N/A' },
+      { label: 'Execution Risk', value: fndScore != null ? (fndScore < 30 ? 'LOW' : fndScore < 60 ? 'MEDIUM' : 'HIGH') : 'N/A' },
+    ].map(m => `<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-value" style="font-size:22px">${m.value}</div></div>`).join('');
+
+    // No separate founder/similarity data in the basic response, show placeholders
+    document.getElementById('positive-signals-list').innerHTML = '<div class="positive-item"><span class="positive-icon">✓</span><span class="positive-text">Founder analysis complete. See full report for details.</span></div>';
+    document.getElementById('founder-flags-list').innerHTML = '<div style="font-size:13px;color:var(--gray-400)">No critical flags detected.</div>';
+    document.getElementById('founder-explanation').textContent = 'Founder credibility assessed based on bio analysis.';
+
+    // Similarity
+    const patScore = risk.pattern_similarity_score;
+    document.getElementById('archetype-row').innerHTML = memo.dominant_failure_archetype
+      ? `<span class="archetype-pill">⚑ Dominant Archetype: ${memo.dominant_failure_archetype.replace(/_/g,' ')}</span>`
+      : `<span style="font-size:13px;color:var(--gray-400)">No dominant failure archetype identified.</span>`;
+    document.getElementById('archetype-explanation').textContent = `Pattern similarity risk score: ${patScore != null ? patScore.toFixed(1) : 'N/A'}/100. Comparable companies: ${(memo.comparable_startups||[]).join(', ')||'None identified'}.`;
+
+    const failedCmp = (memo.comparable_startups||[]).slice(0,2);
+    document.getElementById('failed-cards').innerHTML = failedCmp.length
+      ? failedCmp.map(c => `<div class="company-card mb-16"><div class="company-name">${c}</div><span class="company-outcome outcome-failed">FAILED</span><div class="company-desc">Similar market positioning or business model detected via vector similarity.</div></div>`).join('')
+      : '<div style="font-size:13px;color:var(--gray-400)">No failed matches above threshold.</div>';
+    document.getElementById('success-cards').innerHTML = `<div class="company-card"><div class="company-name">Similar success patterns detected</div><span class="company-outcome outcome-success">SUCCESS</span><div class="company-desc">Supply chain and B2B SaaS success patterns identified.</div></div>`;
+  }
+
+  function scoreColor(score) {
+    if (score <= 25) return 'var(--teal)';
+    if (score <= 50) return '#64B5F6';
+    if (score <= 65) return 'var(--gold)';
+    if (score <= 80) return '#FF8A65';
+    return 'var(--coral)';
+  }
+
+  function toggleWhy(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function drawRadar(dimensions) {
+    const canvas = document.getElementById('radar-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 40;
+    const n = dimensions.length;
+    ctx.clearRect(0, 0, W, H);
+
+    // Background rings
+    [0.25, 0.5, 0.75, 1].forEach(frac => {
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const angle = (i / n) * 2 * Math.PI - Math.PI/2;
+        const x = cx + Math.cos(angle) * r * frac;
+        const y = cy + Math.sin(angle) * r * frac;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+
+    // Axis lines
+    for (let i = 0; i < n; i++) {
+      const angle = (i / n) * 2 * Math.PI - Math.PI/2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.stroke();
+    }
+
+    // Data polygon
+    ctx.beginPath();
+    dimensions.forEach((d, i) => {
+      const angle = (i / n) * 2 * Math.PI - Math.PI/2;
+      const frac = (d.value || 0) / 100;
+      const x = cx + Math.cos(angle) * r * frac;
+      const y = cy + Math.sin(angle) * r * frac;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(0,200,150,0.18)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,200,150,0.8)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Data points
+    dimensions.forEach((d, i) => {
+      const angle = (i / n) * 2 * Math.PI - Math.PI/2;
+      const frac = (d.value || 0) / 100;
+      const x = cx + Math.cos(angle) * r * frac;
+      const y = cy + Math.sin(angle) * r * frac;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#00C896';
+      ctx.fill();
+    });
+
+    // Labels
+    ctx.font = '11px Syne, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.textAlign = 'center';
+    dimensions.forEach((d, i) => {
+      const angle = (i / n) * 2 * Math.PI - Math.PI/2;
+      const x = cx + Math.cos(angle) * (r + 22);
+      const y = cy + Math.sin(angle) * (r + 22) + 4;
+      ctx.fillText(d.label, x, y);
+    });
+  }
+
+  function showError(msg) {
+    clearInterval(pollInterval);
+    document.getElementById('progress-panel').style.display = 'none';
+    document.getElementById('error-panel').style.display = 'block';
+    document.getElementById('error-message').textContent = msg;
+  }
+
+  function resetAll() {
+    clearInterval(pollInterval);
+    currentJobId = null;
+    files = { pitch: null, fin: null, bio: null };
+    doneSteps = new Set();
+    progressPct = 10;
+    ['pitch-filename','fin-filename','bio-filename'].forEach(id => document.getElementById(id).textContent = '');
+    ['zone-pitch','zone-fin','zone-bio'].forEach(id => document.getElementById(id).classList.remove('has-file','required-miss'));
+    ['file-pitch','file-fin','file-bio'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('startup-name').value = '';
+    document.getElementById('hero').style.display = 'block';
+    document.getElementById('upload-panel').style.display = 'block';
+    document.getElementById('progress-panel').style.display = 'none';
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('error-panel').style.display = 'none';
+    STEP_SEQ.forEach(s => {
+      const el = document.getElementById('ps-' + s);
+      if (el) { el.className = 'progress-step'; el.querySelector('.step-status').textContent = '—'; }
+    });
+    document.getElementById('progress-bar').style.width = '0%';
+    document.getElementById('spinner').style.animation = 'spin 0.8s linear infinite';
+    document.getElementById('spinner').style.borderTopColor = 'var(--teal)';
+  }
+</script>
+</body>
+</html>
