@@ -1,0 +1,7 @@
+.env
+ai_vdd_dev.db
+__pycache__/
+*.log
+*.pdf
+.pytest_cache/
+nlp/
