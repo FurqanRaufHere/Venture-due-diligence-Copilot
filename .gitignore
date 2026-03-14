@@ -1,7 +1,25 @@
 .env
 ai_vdd_dev.db
-__pycache__/
-*.log
-*.pdf
 .pytest_cache/
+
+# Create .gitignore
+echo ".env
+__pycache__/
+*.pyc
+*.pyo
 nlp/
+data/faiss_index/
+uploads/
+reports/
+*.db
+*.sqlite
+.DS_Store
+.vscode/
+sentence_transformers_cache/
+*.egg-info/
+dist/
+build/
+" > .gitignore
+
+git add .gitignore
+git commit -m "chore: add .gitignore — exclude env, cache, model files, uploads, db"
