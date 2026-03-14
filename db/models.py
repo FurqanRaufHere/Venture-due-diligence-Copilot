@@ -1,20 +1,3 @@
-"""
-db/models.py
-────────────
-TABLE OVERVIEW:
-  Phase 1 tables:
-    startups          — one row per startup evaluated
-    documents         — uploaded files linked to a startup
-    extracted_claims  — structured JSON from Claim Extraction Agent
-    financial_metrics — computed ratios + anomaly flags
-    risk_scores       — final weighted scores
-
-  Phase 2 tables (NEW):
-    similarity_results — FAISS pattern matching results
-    market_analysis    — RAG market + competition analysis
-    founder_profiles   — structured founder credibility scores
-"""
-
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, Float, Integer, Text, DateTime, JSON, ForeignKey, Boolean
