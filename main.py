@@ -1,10 +1,3 @@
-"""
-main.py  (Updated — Phase 4)
-FastAPI application entry point.
-HOW TO RUN: uvicorn main:app --reload --port 8000
-API DOCS:   http://localhost:8000/docs
-"""
-
 import os
 import logging
 from pathlib import Path
@@ -15,7 +8,7 @@ from dotenv import load_dotenv
 
 from db.database import engine
 from db import models
-from routes.upload import router as upload_router
+from routes.upload import router as upload_router, preload_faiss
 from routes.report import router as report_router
 
 load_dotenv()
@@ -32,20 +25,16 @@ app = FastAPI(
 A production-grade multi-agent AI system for startup investment risk analysis.
 
 ## Workflow
-1. **POST /api/upload** — Upload pitch deck (PDF) + financials (CSV/XLSX) + founder bio (TXT)
+1. **POST /api/upload** — Upload pitch deck + financials + founder bio
 2. **GET /api/status/{job_id}** — Poll until status = "complete"
 3. **GET /api/results/{job_id}** — Full structured due diligence JSON
 4. **GET /api/report/{job_id}** — Download PDF investment memo
 
-## Agents
-- Claim Extraction — JSON schema enforcement, structured pitch deck parsing
-- Financial Analysis — Deterministic Python metrics + LLM explanation
-- Market & Competition — RAG with FAISS vector search (74 startups)
-- Founder Risk — Structured extraction + rule-based credibility scoring
-- Pattern Similarity — Cosine similarity against historical startup database
-- Risk Aggregation — Weighted 5-dimension scoring, Grade A–F
-
-v2.0 — All 4 phases complete.
+## Performance
+- PDF parsing: ~200ms (pypdf, 20-page limit)
+- Claims + Financial: parallel execution
+- Similarity + Market + Founder: parallel execution
+- Total pipeline: ~20-30 seconds
     """,
     version="2.0.0",
 )
@@ -58,26 +47,55 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.on_event("startup")
-async def create_tables():
+async def startup_event():
+    """
+    Runs once when server starts.
+    1. Create all DB tables
+    2. Create upload/report directories
+    3. Preload FAISS index + embedding model into memory
+       so the first user request doesn't trigger a 30-60s load
+    """
+    # DB tables
     models.Base.metadata.create_all(bind=engine)
     logger.info("Database tables created/verified.")
+
+    # Directories
     Path(os.getenv("UPLOAD_DIR", "./uploads")).mkdir(parents=True, exist_ok=True)
     Path("./reports").mkdir(exist_ok=True)
-    logger.info("Directories ready.")
+
+    # Build FAISS index if it doesn't exist yet
+    faiss_index_path = Path("data/faiss_index/startup_index.faiss")
+    if not faiss_index_path.exists():
+        logger.info("FAISS index not found — building now (one-time, ~30s)...")
+        try:
+            from utils.startup_dataset import build_faiss_index
+            build_faiss_index(save=True)
+            logger.info("FAISS index built and saved.")
+        except Exception as e:
+            logger.error(f"FAISS index build failed: {e}")
+
+    # Preload FAISS + embedding model into RAM
+    import threading
+    threading.Thread(target=preload_faiss, daemon=True).start()
+    logger.info("Server ready. Preloading FAISS index in background...")
+
 
 app.include_router(upload_router)
 app.include_router(report_router)
 
+
 @app.get("/health", tags=["system"])
 def health_check():
+    from routes.upload import _faiss_index
     return {
         "status": "healthy",
         "version": "2.0.0",
-        "phase": "Phase 4 Complete — All 23 steps implemented",
-        "agents": ["claim_extraction","financial_analysis","market_rag",
-                   "founder_risk","pattern_similarity","risk_aggregation"],
+        "faiss_loaded": _faiss_index is not None,
+        "phase": "Phase 4 Complete — optimized for production",
     }
+
 
 @app.get("/", tags=["system"])
 def root():

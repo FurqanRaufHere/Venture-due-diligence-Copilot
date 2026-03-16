@@ -3,7 +3,12 @@ services:
     name: Venture-due-diligence-Copilot
     env: python
     plan: free
-    buildCommand: pip install fastapi uvicorn python-multipart pdfplumber pandas openpyxl python-dotenv sqlalchemy pydantic httpx groq sentence-transformers faiss-cpu reportlab numpy "sqlalchemy>=2.0.36" psycopg2-binary && python -m utils.startup_dataset    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    buildCommand: >
+      pip install fastapi uvicorn python-multipart pypdf pdfplumber pandas
+      openpyxl python-dotenv "sqlalchemy>=2.0.36" pydantic httpx groq
+      sentence-transformers faiss-cpu reportlab numpy psycopg2-binary &&
+      python -m utils.startup_dataset
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
     envVars:
       - key: GROQ_API_KEY
         sync: false
@@ -11,3 +16,5 @@ services:
         value: groq
       - key: LLM_MODEL
         value: llama-3.3-70b-versatile
+      - key: UPLOAD_DIR
+        value: /tmp/uploads
