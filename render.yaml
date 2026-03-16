@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: Venture-due-diligence-Copilot
+    name: ai-vdd-copilot
     env: python
     plan: free
     buildCommand: >
@@ -8,7 +8,7 @@ services:
       openpyxl python-dotenv "sqlalchemy>=2.0.36" pydantic httpx groq
       sentence-transformers faiss-cpu reportlab numpy psycopg2-binary &&
       python -m utils.startup_dataset
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: GROQ_API_KEY
         sync: false

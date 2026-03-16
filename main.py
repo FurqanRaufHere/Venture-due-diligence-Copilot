@@ -1,5 +1,6 @@
 import os
 import logging
+import threading
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -25,20 +26,31 @@ app = FastAPI(
 A production-grade multi-agent AI system for startup investment risk analysis.
 
 ## Workflow
-1. **POST /api/upload** — Upload pitch deck + financials + founder bio
-2. **GET /api/status/{job_id}** — Poll until status = "complete"
+1. **POST /api/upload** — Upload pitch deck (PDF) + financials (CSV/XLSX) + founder bio (TXT)
+2. **GET /api/status/{job_id}** — Poll every 2-3s until status = "complete"
 3. **GET /api/results/{job_id}** — Full structured due diligence JSON
 4. **GET /api/report/{job_id}** — Download PDF investment memo
+
+## Agents
+- Claim Extraction — JSON schema enforcement, structured pitch deck parsing
+- Financial Analysis — Deterministic Python metrics + LLM explanation
+- Market & Competition — RAG with FAISS vector search (74 startups)
+- Founder Risk — Structured extraction + rule-based credibility scoring
+- Pattern Similarity — Cosine similarity against historical startup database
+- Risk Aggregation — Weighted 5-dimension scoring, Grade A–F
 
 ## Performance
 - PDF parsing: ~200ms (pypdf, 20-page limit)
 - Claims + Financial: parallel execution
 - Similarity + Market + Founder: parallel execution
 - Total pipeline: ~20-30 seconds
+
+v2.0 — All 4 phases complete.
     """,
     version="2.0.0",
 )
 
+# ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -48,52 +60,64 @@ app.add_middleware(
 )
 
 
+# ── Startup ───────────────────────────────────────────────────────────────────
 @app.on_event("startup")
 async def startup_event():
     """
-    Runs once when server starts.
-    1. Create all DB tables
-    2. Create upload/report directories
-    3. Preload FAISS index + embedding model into memory
-       so the first user request doesn't trigger a 30-60s load
+    Runs once when the server starts.
+
+    IMPORTANT: This must be fast and non-blocking.
+    Render kills the server if no port is bound within ~30 seconds.
+
+    What we do here:
+      1. Create DB tables (instant)
+      2. Create upload/report directories (instant)
+      3. Start FAISS preload in a background thread (non-blocking)
+         The FAISS index was already BUILT during the render.yaml
+         build command — we're just loading it into RAM here.
+
+    What we do NOT do here:
+      - Build the FAISS index (takes 30-60s — do this at build time)
+      - Download the embedding model (same reason)
     """
-    # DB tables
+    # 1. DB tables
     models.Base.metadata.create_all(bind=engine)
     logger.info("Database tables created/verified.")
 
-    # Directories
-    Path(os.getenv("UPLOAD_DIR", "./uploads")).mkdir(parents=True, exist_ok=True)
-    Path("./reports").mkdir(exist_ok=True)
+    # 2. Directories
+    upload_dir = os.getenv("UPLOAD_DIR", "/tmp/uploads")
+    Path(upload_dir).mkdir(parents=True, exist_ok=True)
+    Path("/tmp/reports").mkdir(exist_ok=True)
+    logger.info(f"Directories ready: {upload_dir}, /tmp/reports")
 
-    # Build FAISS index if it doesn't exist yet
-    faiss_index_path = Path("data/faiss_index/startup_index.faiss")
-    if not faiss_index_path.exists():
-        logger.info("FAISS index not found — building now (one-time, ~30s)...")
-        try:
-            from utils.startup_dataset import build_faiss_index
-            build_faiss_index(save=True)
-            logger.info("FAISS index built and saved.")
-        except Exception as e:
-            logger.error(f"FAISS index build failed: {e}")
-
-    # Preload FAISS + embedding model into RAM
-    import threading
+    # 3. Preload FAISS in background — does NOT block port binding
     threading.Thread(target=preload_faiss, daemon=True).start()
-    logger.info("Server ready. Preloading FAISS index in background...")
+    logger.info("Server startup complete. FAISS preloading in background thread.")
 
 
+# ── Routes ────────────────────────────────────────────────────────────────────
 app.include_router(upload_router)
 app.include_router(report_router)
 
 
+# ── Health check ──────────────────────────────────────────────────────────────
 @app.get("/health", tags=["system"])
 def health_check():
+    """Health check — also shows whether FAISS is loaded yet."""
     from routes.upload import _faiss_index
     return {
         "status": "healthy",
         "version": "2.0.0",
-        "faiss_loaded": _faiss_index is not None,
-        "phase": "Phase 4 Complete — optimized for production",
+        "faiss_ready": _faiss_index is not None,
+        "phase": "Phase 4 — Production Optimized",
+        "agents": [
+            "claim_extraction",
+            "financial_analysis",
+            "market_rag",
+            "founder_risk",
+            "pattern_similarity",
+            "risk_aggregation",
+        ],
     }
 
 
@@ -103,4 +127,6 @@ def root():
         "message": "AI Venture Due Diligence Copilot API v2.0",
         "docs": "/docs",
         "health": "/health",
+        "upload": "POST /api/upload",
+        "report": "GET /api/report/{job_id}",
     }
