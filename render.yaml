@@ -3,8 +3,7 @@ services:
     name: Venture-due-diligence-Copilot
     env: python
     plan: free
-    buildCommand: pip install fastapi uvicorn python-multipart pdfplumber pandas openpyxl python-dotenv sqlalchemy pydantic httpx groq sentence-transformers faiss-cpu reportlab numpy "sqlalchemy>=2.0.36" && python -m utils.startup_dataset
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install fastapi uvicorn python-multipart pdfplumber pandas openpyxl python-dotenv sqlalchemy pydantic httpx groq sentence-transformers faiss-cpu reportlab numpy "sqlalchemy>=2.0.36" psycopg2-binary && python -m utils.startup_dataset    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: GROQ_API_KEY
         sync: false

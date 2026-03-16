@@ -62,7 +62,10 @@ def extract_text_from_pdf(filepath: str) -> Tuple[str, int]:
     try:
         with pdfplumber.open(str(path)) as pdf:
             page_count = len(pdf.pages)
-            for i, page in enumerate(pdf.pages):
+            # Limit to first 15 pages on production to save memory
+            MAX_PAGES = 15
+            pages_to_read = pdf.pages[:MAX_PAGES]
+            for i, page in enumerate(pages_to_read):
                 text = page.extract_text()
                 if text:
                     pages_text.append(f"[PAGE {i+1}]\n{text}")
