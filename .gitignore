@@ -2,6 +2,8 @@
 ai_vdd_dev.db
 .pytest_cache/
 
+data/
+
 # Create .gitignore
 echo ".env
 __pycache__/
