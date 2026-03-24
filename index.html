@@ -741,7 +741,14 @@
   const API_LABEL = API || `${window.location.origin}/api (proxied)`;
 
   function apiUrl(path) {
-    return `${API}${path}`;
+    // In Netlify, all /api/* calls are proxied to Render via netlify.toml
+    // No need to prepend a base URL—just return the path as-is
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      // Local development: direct to http://127.0.0.1:8000
+      return `http://127.0.0.1:8000${path}`;
+    }
+    // Netlify/production: use relative path (netlify.toml will proxy to Render)
+    return path;
   }
 
   let currentJobId = null;
