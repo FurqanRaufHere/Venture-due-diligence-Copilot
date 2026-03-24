@@ -188,3 +188,92 @@ GET /api/report/{job_id}  →  PDF investment memo
 **Grades:** A (0–20) · B (21–40) · C (41–60) · D (61–80) · F (81–100)
 
 ---
+
+## Deploy Guide (Render Backend + Netlify Frontend)
+
+This project is now structured to support:
+
+- Backend API on Render
+- Static frontend on Netlify
+- Frontend calls `/api/*` and Netlify proxies that path to Render
+
+### 1. Prepare Backend for Render
+
+1. Push this repo to GitHub.
+2. In Render, click **New +** → **Web Service**.
+3. Connect the repo.
+4. Render will read [render.yaml](render.yaml).
+5. Confirm these settings:
+  1. Build command installs dependencies and prebuilds FAISS index.
+  2. Start command is `uvicorn main:app --host 0.0.0.0 --port $PORT`.
+  3. Health check path is `/health`.
+
+### 2. Set Render Environment Variables
+
+In Render service settings, add:
+
+1. `GROQ_API_KEY` = your key
+2. `LLM_PROVIDER` = `groq`
+3. `LLM_MODEL` = `llama-3.3-70b-versatile`
+4. `UPLOAD_DIR` = `/tmp/uploads`
+5. `REPORTS_DIR` = `/tmp/reports`
+6. `DATABASE_URL`:
+  1. For quick start: omit and use local SQLite in Render filesystem (ephemeral)
+  2. For production: attach Render PostgreSQL and set its connection URL
+
+### 3. Deploy Backend and Verify
+
+1. Trigger deploy.
+2. Open backend URL, for example `https://your-service.onrender.com/health`.
+3. Verify response includes `status: healthy`.
+
+### 4. Configure Netlify Proxy
+
+This repo includes [netlify.toml](netlify.toml) with API proxy rules.
+
+Before Netlify deploy, edit one value in [netlify.toml](netlify.toml):
+
+1. Replace `https://YOUR-RENDER-SERVICE.onrender.com` with your real Render backend URL.
+
+That enables this flow:
+
+1. Browser requests `/api/upload` on Netlify domain.
+2. Netlify proxies request to Render `/api/upload`.
+3. Frontend stays simple and does not hardcode Render URL in JS.
+
+### 5. Deploy Frontend to Netlify
+
+1. In Netlify, click **Add new site** → **Import from Git**.
+2. Select the same repo.
+3. Build settings:
+  1. Build command: leave empty or use default from [netlify.toml](netlify.toml)
+  2. Publish directory: `.`
+4. Deploy site.
+
+### 6. Post-Deploy Checks
+
+Run these checks in order:
+
+1. Open Netlify site home page.
+2. Upload sample files and click Analyze.
+3. Confirm upload starts and status polling updates.
+4. Confirm results render and **Export Report** downloads a PDF.
+5. If upload fails:
+  1. Check Netlify deploy used updated [netlify.toml](netlify.toml)
+  2. Check Render service is healthy and not sleeping
+  3. Check Render logs for `/api/upload` errors
+
+### 7. Local Development Still Works
+
+Frontend auto behavior in [index.html](index.html):
+
+1. On `localhost` / `127.0.0.1` → uses `http://127.0.0.1:8000`
+2. On hosted domains (Netlify) → uses relative `/api/*` (proxy)
+
+Optional override for testing:
+
+1. Add query param `?apiBase=https://your-render-url.onrender.com`
+2. Or set in browser console:
+  `localStorage.setItem('API_BASE_URL', 'https://your-render-url.onrender.com')`
+
+---
