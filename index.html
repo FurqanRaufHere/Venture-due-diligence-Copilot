@@ -555,7 +555,7 @@
   <!-- ERROR PANEL (hidden) -->
   <div class="error-panel" id="error-panel" style="display:none">
     <h3>Analysis failed</h3>
-    <p id="error-message">Something went wrong. Check that the backend is running at localhost:8000.</p>
+    <p id="error-message">Something went wrong. Check that the backend is running and reachable.</p>
     <button class="btn-retry" onclick="resetAll()">Try Again</button>
   </div>
 
@@ -570,7 +570,7 @@
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <span class="confidence-badge" id="confidence-badge"><span class="conf-dot"></span>HIGH CONFIDENCE</span>
-        <button class="btn-export" onclick="window.open('http://localhost:8000/api/report/' + currentJobId)">⬇ Export Report</button>
+        <button class="btn-export" onclick="window.open(apiUrl('/api/report/' + currentJobId))">⬇ Export Report</button>
         <button class="btn-export" style="color:var(--gray-400);border-color:var(--border)" onclick="resetAll()">New Analysis</button>
 
       </div>
@@ -592,13 +592,13 @@
     <!-- RADAR + RISK BREAKDOWN -->
     <div class="grid-2 mb-24">
       <div class="card">
-        <div class="section-title">Risk Radar <span class="section-tag">ALL 5 DIMENSIONS</span></div>
+        <div class="section-title">Risk Signal Map <span class="section-tag">ALL 5 DIMENSIONS</span></div>
         <div class="radar-wrap">
           <canvas id="radar-chart" width="260" height="260"></canvas>
         </div>
       </div>
       <div class="card">
-        <div class="section-title">Risk Breakdown</div>
+        <div class="section-title">Risk Drivers (Impact on Overall Score)</div>
         <div id="risk-bars"></div>
       </div>
     </div>
@@ -606,15 +606,15 @@
     <!-- RED FLAGS + EXECUTIVE SUMMARY -->
     <div class="grid-2 mb-24">
       <div class="card">
-        <div class="section-title">Red Flags <span class="section-tag" id="flag-count-tag">0</span></div>
+        <div class="section-title">Decision Risks <span class="section-tag" id="flag-count-tag">0</span></div>
         <div id="red-flags-list"></div>
         <div style="margin-top:16px">
-          <div class="section-title" style="font-size:16px">Recommendations</div>
+          <div class="section-title" style="font-size:16px">Immediate Actions</div>
           <div id="recommendations-list"></div>
         </div>
       </div>
       <div class="card">
-        <div class="section-title">Executive Summary <span class="section-tag">LLM</span></div>
+        <div class="section-title">Investment Narrative <span class="section-tag">SYNTHESIZED</span></div>
         <div class="summary-box" id="summary-box"></div>
         <!-- Why section (Step 17) -->
         <button class="why-toggle" onclick="toggleWhy('why-summary')">▸ Why this assessment?</button>
@@ -648,7 +648,7 @@
 
     <!-- MARKET ANALYSIS -->
     <div class="card mb-24" id="market-section">
-      <div class="section-title">Market & Competition <span class="section-tag">RAG AGENT</span></div>
+      <div class="section-title">Market Evidence <span class="section-tag">RAG AGENT</span></div>
       <div class="grid-3 mb-16" id="market-metrics-grid"></div>
       <div style="font-size:13px;color:var(--gray-400);margin-bottom:12px;font-family:var(--font-mono)">MARKET ASSESSMENT — LLM-GENERATED FROM RETRIEVED DATA</div>
       <div style="font-size:14px;color:var(--gray-200);line-height:1.7;margin-bottom:16px" id="market-assessment"></div>
@@ -661,7 +661,7 @@
 
     <!-- FOUNDER ANALYSIS -->
     <div class="card mb-24" id="founder-section">
-      <div class="section-title">Founder Risk Profile <span class="section-tag">FOUNDER AGENT</span></div>
+      <div class="section-title">Founder Execution Signal <span class="section-tag">FOUNDER AGENT</span></div>
       <div class="grid-3 mb-16" id="founder-metrics-grid"></div>
       <div class="grid-2">
         <div>
@@ -682,15 +682,15 @@
 
     <!-- SIMILARITY ANALYSIS -->
     <div class="card mb-24" id="similarity-section">
-      <div class="section-title">Failure Pattern Analysis <span class="section-tag">FAISS SIMILARITY</span></div>
+      <div class="section-title">Pattern Evidence <span class="section-tag">FAISS SIMILARITY</span></div>
       <div id="archetype-row" style="margin-bottom:20px"></div>
       <div class="grid-2 mb-16">
         <div>
-          <div style="font-size:12px;font-family:var(--font-mono);color:var(--coral);margin-bottom:12px">SIMILAR FAILED STARTUPS</div>
+          <div style="font-size:12px;font-family:var(--font-mono);color:var(--coral);margin-bottom:12px">TOP COMPARABLE STARTUPS</div>
           <div id="failed-cards"></div>
         </div>
         <div>
-          <div style="font-size:12px;font-family:var(--font-mono);color:var(--teal);margin-bottom:12px">SIMILAR SUCCESSFUL STARTUPS</div>
+          <div style="font-size:12px;font-family:var(--font-mono);color:var(--teal);margin-bottom:12px">WHY THESE COMPARABLES MATTER</div>
           <div id="success-cards"></div>
         </div>
       </div>
@@ -712,10 +712,40 @@
 </div>
 
 <script>
-  const API = 'https://venture-due-diligence-copilot.onrender.com';
+  function resolveApiBase() {
+    const qs = new URLSearchParams(window.location.search);
+    const queryOverride = qs.get('apiBase');
+    const savedOverride = window.localStorage.getItem('API_BASE_URL');
+    const override = queryOverride || savedOverride;
+    if (override) return override.replace(/\/$/, '');
+
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://127.0.0.1:8000';
+    }
+
+    // On Netlify or any hosted frontend, use same-origin and rely on proxy rewrites.
+    return '';
+  }
+
+  const API = resolveApiBase();
+  const API_LABEL = API || `${window.location.origin}/api (proxied)`;
+
+  function apiUrl(path) {
+    return `${API}${path}`;
+  }
+
   let currentJobId = null;
   let pollInterval = null;
   let files = { pitch: null, fin: null, bio: null };
+  let statusFetchFailures = 0;
+
+  function toUserFacingError(err, fallbackMsg) {
+    if (err && err.name === 'TypeError' && /fetch/i.test(err.message || '')) {
+      return `Failed to connect to backend at ${API_LABEL}. If deployed, ensure Netlify proxy and Render API URL are configured correctly.`;
+    }
+    return err?.message || fallbackMsg;
+  }
 
   function handleFile(input, type) {
     if (input.files[0]) {
@@ -751,7 +781,7 @@
       advanceStep('parse', 'active');
       updateProgressBar(10);
 
-      const res = await fetch(`${API}/api/upload`, { method: 'POST', body: fd });
+      const res = await fetch(apiUrl('/api/upload'), { method: 'POST', body: fd });
       if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
       const data = await res.json();
       currentJobId = data.job_id;
@@ -761,7 +791,7 @@
 
       pollInterval = setInterval(pollStatus, 2500);
     } catch(e) {
-      showError(e.message);
+      showError(toUserFacingError(e, 'Upload failed.'));
     }
   }
 
@@ -771,7 +801,8 @@
 
   async function pollStatus() {
     try {
-      const res = await fetch(`${API}/api/status/${currentJobId}`);
+      const res = await fetch(apiUrl(`/api/status/${currentJobId}`));
+      statusFetchFailures = 0;
       const data = await res.json();
 
       if (data.status === 'complete') {
@@ -801,7 +832,11 @@
         document.getElementById('progress-current-step').textContent = `Status: ${data.status}`;
       }
     } catch(e) {
-      // backend might be slow, keep polling
+      statusFetchFailures += 1;
+      if (statusFetchFailures >= 3) {
+        clearInterval(pollInterval);
+        showError(toUserFacingError(e, 'Unable to poll analysis status.'));
+      }
     }
   }
 
@@ -820,11 +855,11 @@
 
   async function loadResults() {
     try {
-      const res = await fetch(`${API}/api/results/${currentJobId}`);
+      const res = await fetch(apiUrl(`/api/results/${currentJobId}`));
       const data = await res.json();
       renderResults(data);
     } catch(e) {
-      showError('Failed to load results: ' + e.message);
+      showError('Failed to load results: ' + toUserFacingError(e, 'Unknown error'));
     }
   }
 
@@ -836,6 +871,38 @@
     const claims = data.extracted_claims || {};
     const fin = data.financial_metrics || {};
     const memo = risk.due_diligence_memo || {};
+    const dims = [
+      { key: 'financial_risk_score', label: 'Financial Risk', short: 'FIN', weight: 0.30, weightLabel: '30%' },
+      { key: 'market_risk_score', label: 'Market Risk', short: 'MKT', weight: 0.25, weightLabel: '25%' },
+      { key: 'founder_risk_score', label: 'Founder Risk', short: 'FND', weight: 0.20, weightLabel: '20%' },
+      { key: 'narrative_inflation_score', label: 'Narrative Inflation', short: 'NAR', weight: 0.15, weightLabel: '15%' },
+      { key: 'pattern_similarity_score', label: 'Pattern Similarity', short: 'PAT', weight: 0.10, weightLabel: '10%' },
+    ];
+
+    const dimsWithScores = dims.map(d => {
+      const raw = risk[d.key];
+      const available = raw !== null && raw !== undefined;
+      return {
+        ...d,
+        available,
+        score: available ? Number(raw) : null,
+      };
+    });
+    const availableDims = dimsWithScores.filter(d => d.available);
+    const totalAvailableWeight = availableDims.reduce((sum, d) => sum + d.weight, 0) || 1;
+    const dimsWithImpact = dimsWithScores.map(d => {
+      if (!d.available) return { ...d, normalizedWeight: 0, impactPoints: null };
+      const normalizedWeight = d.weight / totalAvailableWeight;
+      return {
+        ...d,
+        normalizedWeight,
+        impactPoints: Number((d.score * normalizedWeight).toFixed(1)),
+      };
+    });
+    const topDrivers = dimsWithImpact
+      .filter(d => d.available)
+      .sort((a, b) => b.impactPoints - a.impactPoints)
+      .slice(0, 2);
 
     // Startup name
     document.getElementById('result-startup-name').textContent = data.startup_name || 'Startup Analysis';
@@ -846,7 +913,7 @@
     confBadge.className = 'confidence-badge conf-' + conf;
     confBadge.innerHTML = `<span class="conf-dot"></span>${conf.toUpperCase()} CONFIDENCE`;
 
-    // Grade
+    // Grade + summary framing
     const grade = risk.investment_grade || 'C';
     const score = risk.overall_risk_score || 0;
     const gradeCircle = document.getElementById('grade-circle');
@@ -856,68 +923,86 @@
     const gradeNames = { A:'Low Risk', B:'Moderate Risk', C:'Elevated Risk', D:'High Risk', F:'Very High Risk' };
     document.getElementById('grade-headline').textContent = `Grade ${grade} — ${gradeNames[grade] || 'Unknown'}`;
 
+    const dataCoverage = `${availableDims.length}/5 dimensions analyzed`;
+    const driverText = topDrivers.length
+      ? topDrivers.map(d => `${d.label} (${d.impactPoints.toFixed(1)} pts impact)`).join(' and ')
+      : 'insufficient dimensional data';
+    const narrative = memo.executive_summary ||
+      `Current assessment is Grade ${grade} with overall risk ${score}/100. Main risk pressure comes from ${driverText}.`;
+
     // Executive summary
-    document.getElementById('executive-summary').textContent = memo.executive_summary || 'Analysis complete.';
-    document.getElementById('summary-box').textContent = memo.executive_summary || '';
-    document.getElementById('why-summary').textContent = `Risk score: ${score}/100. Weighted across ${risk.scores_available || 0} of 5 dimensions. Confidence is ${conf} because ${risk.scores_available < 5 ? 'not all agents ran successfully' : 'all 5 agents ran and produced valid scores'}.`;
+    document.getElementById('executive-summary').textContent = narrative;
+    document.getElementById('summary-box').textContent = narrative;
+    document.getElementById('why-summary').textContent = `Overall risk is a weighted blend of available dimensions. Data coverage: ${dataCoverage}. Top weighted contributors: ${driverText}. Confidence is ${conf.toUpperCase()} based on the number of completed risk dimensions.`;
 
     // Score pills
     const pillsEl = document.getElementById('score-pills');
     pillsEl.innerHTML = '';
     const scoreFields = [
-      { key: 'overall_risk_score', label: 'Overall', color: scoreColor(score) },
+      { label: 'Overall Risk', value: score != null ? `${Number(score).toFixed(1)}/100` : 'N/A', color: scoreColor(Number(score || 0)) },
+      { label: 'Data Coverage', value: dataCoverage, color: 'var(--teal)' },
+      { label: 'Confidence', value: conf.toUpperCase(), color: conf === 'high' ? 'var(--teal)' : conf === 'medium' ? 'var(--gold)' : 'var(--gray-400)' },
     ];
     scoreFields.forEach(f => {
-      const v = risk[f.key];
-      if (v !== null && v !== undefined) {
-        pillsEl.innerHTML += `<div class="score-pill"><span class="score-num" style="color:${f.color}">${v.toFixed(1)}</span><span style="font-size:12px;color:var(--gray-400)">/100 ${f.label}</span></div>`;
-      }
+      pillsEl.innerHTML += `<div class="score-pill"><span class="score-num" style="color:${f.color}">${f.value}</span><span style="font-size:12px;color:var(--gray-400)">${f.label}</span></div>`;
     });
 
-    // Risk bars
+    // Risk bars: show both raw score and weighted impact in points.
     const barsEl = document.getElementById('risk-bars');
     barsEl.innerHTML = '';
-    const dims = [
-      { key: 'financial_risk_score',      label: 'Financial Risk',      weight: '30%' },
-      { key: 'market_risk_score',          label: 'Market Risk',          weight: '25%' },
-      { key: 'founder_risk_score',         label: 'Founder Risk',         weight: '20%' },
-      { key: 'narrative_inflation_score',  label: 'Narrative Inflation',  weight: '15%' },
-      { key: 'pattern_similarity_score',   label: 'Pattern Similarity',   weight: '10%' },
-    ];
-    dims.forEach(d => {
-      const v = risk[d.key];
-      const pct = v !== null && v !== undefined ? v : 0;
-      const na = v === null || v === undefined;
+    dimsWithImpact.forEach(d => {
+      const pct = d.available ? d.score : 0;
+      const na = !d.available;
+      const impactWidth = na ? 0 : Math.max(3, d.impactPoints);
       barsEl.innerHTML += `
         <div class="risk-dimension">
           <div class="risk-dim-header">
-            <span class="risk-dim-name">${d.label} <span class="risk-dim-weight">${d.weight}</span></span>
-            <span class="risk-dim-score" style="color:${na?'var(--gray-400)':scoreColor(pct)}">${na ? 'N/A' : pct.toFixed(1)}</span>
+            <span class="risk-dim-name">${d.label} <span class="risk-dim-weight">${d.weightLabel}</span></span>
+            <span class="risk-dim-score" style="color:${na?'var(--gray-400)':scoreColor(pct)}">${na ? 'N/A' : pct.toFixed(1) + '/100'}</span>
           </div>
           <div class="risk-bar-track">
             <div class="risk-bar-fill" style="width:${na?'0':pct}%;background:${na?'var(--surface-3)':scoreColor(pct)}"></div>
           </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:11px;color:var(--gray-400);font-family:var(--font-mono)">
+            <span>${na ? 'No data from this agent yet' : `Weighted impact: ${d.impactPoints.toFixed(1)} points`}</span>
+            <span>${na ? '' : `Normalized weight ${(d.normalizedWeight * 100).toFixed(1)}%`}</span>
+          </div>
+          <div class="risk-bar-track" style="height:5px;margin-top:6px">
+            <div class="risk-bar-fill" style="width:${impactWidth}%;background:${na?'var(--surface-3)':'rgba(255,255,255,0.55)'}"></div>
+          </div>
         </div>`;
     });
 
-    // Draw radar
-    drawRadar(dims.map(d => ({ label: d.label.split(' ')[0], value: risk[d.key] || 0 })));
+    // Draw radar using actual available values.
+    drawRadar(dimsWithScores.map(d => ({ label: d.short, value: d.score || 0 })));
 
-    // Red flags
-    const flags = memo.all_red_flags || [];
+    // Risks and actions
+    const flags = [...new Set([...(memo.all_red_flags || []), ...(fin.red_flags || [])].filter(Boolean))];
     document.getElementById('flag-count-tag').textContent = flags.length;
     const flagsEl = document.getElementById('red-flags-list');
     if (flags.length === 0) {
-      flagsEl.innerHTML = '<div style="font-size:14px;color:var(--teal);padding:12px 0">✓ No major red flags detected</div>';
+      flagsEl.innerHTML = '<div style="font-size:14px;color:var(--teal);padding:12px 0">✓ No explicit red flags were returned by the completed agents.</div>';
     } else {
       flagsEl.innerHTML = flags.map(f => `<div class="flag-item"><span class="flag-icon">⚠</span><span class="flag-text">${f}</span></div>`).join('');
     }
 
-    // Recommendations (advisory panel)
-    const recs = memo.recommendations || [];
+    // Recommendations
+    const generatedRecs = [];
+    if ((risk.financial_risk_score || 0) > 60) generatedRecs.push('Request a revised operating model with assumption sensitivity (base / best / worst).');
+    if ((risk.market_risk_score || 0) > 60) generatedRecs.push('Run 10 customer interviews focused on willingness-to-pay and switching constraints.');
+    if ((risk.founder_risk_score || 0) > 60) generatedRecs.push('Validate team execution readiness and role coverage before investment committee.');
+    if ((risk.narrative_inflation_score || 0) > 50) generatedRecs.push('Demand third-party evidence for growth and TAM claims before underwriting.');
+    if ((risk.pattern_similarity_score || 0) > 60) generatedRecs.push('Review top comparable failure cases with founders and test mitigation plan.');
+    const recs = (memo.recommendations && memo.recommendations.length) ? memo.recommendations : generatedRecs;
+
     const recsEl = document.getElementById('recommendations-list');
-    recsEl.innerHTML = recs.slice(0,3).map((r,i) => `<div class="rec-item"><div class="rec-num">${i+1}</div><div class="rec-text">${r}</div></div>`).join('');
-    document.getElementById('advisory-list').innerHTML = recs.map((r,i) => `<div class="rec-item"><div class="rec-num">${i+1}</div><div class="rec-text">${r}</div></div>`).join('');
+    recsEl.innerHTML = (recs.length ? recs : ['No additional actions suggested by current outputs.'])
+      .slice(0, 3)
+      .map((r,i) => `<div class="rec-item"><div class="rec-num">${i+1}</div><div class="rec-text">${r}</div></div>`)
+      .join('');
+    document.getElementById('advisory-list').innerHTML = (recs.length ? recs : ['No additional actions suggested by current outputs.'])
+      .map((r,i) => `<div class="rec-item"><div class="rec-num">${i+1}</div><div class="rec-text">${r}</div></div>`)
+      .join('');
 
     // Financial metrics
     const finGrid = document.getElementById('financial-metrics-grid');
@@ -929,7 +1014,7 @@
       { label: 'Plausibility', value: fin.financial_plausibility_score != null ? fin.financial_plausibility_score+'/100' : 'N/A', sub: 'financial score' },
       { label: 'CAC/LTV', value: fin.cac_ltv_ratio != null ? fin.cac_ltv_ratio.toFixed(2) : 'N/A', sub: 'ratio' },
     ].map(m => `<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-value">${m.value}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
-    document.getElementById('anomaly-explanation').textContent = fin.anomaly_explanation || 'No anomaly explanation available.';
+    document.getElementById('anomaly-explanation').textContent = fin.anomaly_explanation || 'No anomaly explanation available for this run.';
 
     // Claims table
     const claimsEl = document.getElementById('claims-table');
@@ -943,17 +1028,18 @@
     claimsEl.innerHTML = claimRows.map(r =>
       `<div class="claim-row"><div class="claim-key">${r.label}</div><div class="claim-val">${claims[r.key] || '—'}</div></div>`
     ).join('');
+    claimsEl.innerHTML += `<div class="claim-row"><div class="claim-key">growth_claims</div><div class="claim-val">${(claims.growth_claims || []).length ? claims.growth_claims.join(' | ') : '—'}</div></div>`;
+    claimsEl.innerHTML += `<div class="claim-row"><div class="claim-key">advantage_claims</div><div class="claim-val">${(claims.competitive_advantage_claims || []).length ? claims.competitive_advantage_claims.join(' | ') : '—'}</div></div>`;
     if (claims.hype_indicators && claims.hype_indicators.length) {
       claimsEl.innerHTML += `<div class="claim-row"><div class="claim-key">hype_phrases</div><div class="claim-val">${claims.hype_indicators.map(h => `<span style="background:rgba(255,92,92,0.12);color:#FF8A8A;border-radius:4px;padding:2px 8px;font-size:12px;margin-right:6px">${h}</span>`).join('')}</div></div>`;
     }
 
-    // Market (use the data from memo + risk fields)
+    // Market evidence
     const mktCompetitors = (memo.comparable_startups || []).slice(0, 6);
     const compEl = document.getElementById('competitor-cards');
-    if (mktCompetitors.length) {
-      compEl.innerHTML = `<div style="font-size:12px;font-family:var(--font-mono);color:var(--gray-400);margin-bottom:10px">COMPARABLE COMPANIES RETRIEVED</div>` +
-        `<div style="display:flex;flex-wrap:wrap;gap:8px">${mktCompetitors.map(c => `<span style="background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:13px">${c}</span>`).join('')}</div>`;
-    }
+    compEl.innerHTML = mktCompetitors.length
+      ? `<div style="font-size:12px;font-family:var(--font-mono);color:var(--gray-400);margin-bottom:10px">COMPARABLE COMPANIES RETRIEVED</div><div style="display:flex;flex-wrap:wrap;gap:8px">${mktCompetitors.map(c => `<span style="background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:13px">${c}</span>`).join('')}</div>`
+      : `<div style="font-size:13px;color:var(--gray-400)">No comparable startups were returned for this run.</div>`;
 
     const mktGrid = document.getElementById('market-metrics-grid');
     const mktScore = risk.market_risk_score;
@@ -962,7 +1048,9 @@
       { label: 'Confidence', value: conf.toUpperCase() },
       { label: 'Comparables', value: mktCompetitors.length },
     ].map(m => `<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-value" style="font-size:22px">${m.value}</div></div>`).join('');
-    document.getElementById('market-assessment').textContent = memo.executive_summary || 'Market analysis complete.';
+    document.getElementById('market-assessment').textContent = mktCompetitors.length
+      ? `Retrieved ${mktCompetitors.length} comparable startups to ground market context. Use these as benchmarks for differentiation and go-to-market assumptions.`
+      : 'Market module completed, but no explicit comparable startup list was returned in this response.';
 
     // Founder metrics
     const fndScore = risk.founder_risk_score;
@@ -973,23 +1061,37 @@
       { label: 'Execution Risk', value: fndScore != null ? (fndScore < 30 ? 'LOW' : fndScore < 60 ? 'MEDIUM' : 'HIGH') : 'N/A' },
     ].map(m => `<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-value" style="font-size:22px">${m.value}</div></div>`).join('');
 
-    // No separate founder/similarity data in the basic response, show placeholders
-    document.getElementById('positive-signals-list').innerHTML = '<div class="positive-item"><span class="positive-icon">✓</span><span class="positive-text">Founder analysis complete. See full report for details.</span></div>';
-    document.getElementById('founder-flags-list').innerHTML = '<div style="font-size:13px;color:var(--gray-400)">No critical flags detected.</div>';
-    document.getElementById('founder-explanation').textContent = 'Founder credibility assessed based on bio analysis.';
+    document.getElementById('positive-signals-list').innerHTML = fndScore != null && fndScore < 40
+      ? '<div class="positive-item"><span class="positive-icon">✓</span><span class="positive-text">Founder execution risk is in a manageable band for current diligence stage.</span></div>'
+      : '<div style="font-size:13px;color:var(--gray-400)">No strong founder-positive signal was returned in this endpoint payload.</div>';
+    document.getElementById('founder-flags-list').innerHTML = fndScore != null && fndScore >= 60
+      ? '<div class="flag-item"><span class="flag-icon">⚠</span><span class="flag-text">Founder execution risk is elevated. Validate team completeness and execution track record before final decision.</span></div>'
+      : '<div style="font-size:13px;color:var(--gray-400)">No founder-specific red flag list available in this payload.</div>';
+    document.getElementById('founder-explanation').textContent = fndScore != null
+      ? `Founder module produced a risk score of ${fndScore.toFixed(1)}/100. Use this signal with references and role-coverage checks in partner diligence.`
+      : 'Founder signal was not available in this run.';
 
-    // Similarity
+    // Similarity evidence
     const patScore = risk.pattern_similarity_score;
     document.getElementById('archetype-row').innerHTML = memo.dominant_failure_archetype
       ? `<span class="archetype-pill">⚑ Dominant Archetype: ${memo.dominant_failure_archetype.replace(/_/g,' ')}</span>`
       : `<span style="font-size:13px;color:var(--gray-400)">No dominant failure archetype identified.</span>`;
-    document.getElementById('archetype-explanation').textContent = `Pattern similarity risk score: ${patScore != null ? patScore.toFixed(1) : 'N/A'}/100. Comparable companies: ${(memo.comparable_startups||[]).join(', ')||'None identified'}.`;
+    document.getElementById('archetype-explanation').textContent = `Pattern similarity risk score: ${patScore != null ? patScore.toFixed(1) : 'N/A'}/100. Comparable companies: ${(memo.comparable_startups||[]).join(', ') || 'None identified'}.`;
 
-    const failedCmp = (memo.comparable_startups||[]).slice(0,2);
+    const failedCmp = (memo.comparable_startups || []).slice(0, 3);
     document.getElementById('failed-cards').innerHTML = failedCmp.length
-      ? failedCmp.map(c => `<div class="company-card mb-16"><div class="company-name">${c}</div><span class="company-outcome outcome-failed">FAILED</span><div class="company-desc">Similar market positioning or business model detected via vector similarity.</div></div>`).join('')
-      : '<div style="font-size:13px;color:var(--gray-400)">No failed matches above threshold.</div>';
-    document.getElementById('success-cards').innerHTML = `<div class="company-card"><div class="company-name">Similar success patterns detected</div><span class="company-outcome outcome-success">SUCCESS</span><div class="company-desc">Supply chain and B2B SaaS success patterns identified.</div></div>`;
+      ? failedCmp.map(c => `<div class="company-card mb-16"><div class="company-name">${c}</div><div class="company-desc">Retrieved as a close semantic match to the current startup profile.</div></div>`).join('')
+      : '<div style="font-size:13px;color:var(--gray-400)">No comparables above retrieval threshold.</div>';
+    document.getElementById('success-cards').innerHTML = failedCmp.length
+      ? `<div class="company-card"><div class="company-name">Evidence use</div><div class="company-desc">These comparables are evidence anchors. They are not automatically labeled as success or failure in this endpoint.</div></div>`
+      : `<div style="font-size:13px;color:var(--gray-400)">Similarity evidence is limited for this run.</div>`;
+
+    // Hide sections that have no underlying evidence to reduce UI noise.
+    document.getElementById('financial-section').style.display = Object.keys(fin).length ? 'block' : 'none';
+    document.getElementById('claims-section').style.display = Object.keys(claims).length ? 'block' : 'none';
+    document.getElementById('market-section').style.display = 'block';
+    document.getElementById('founder-section').style.display = fndScore != null ? 'block' : 'none';
+    document.getElementById('similarity-section').style.display = (patScore != null || mktCompetitors.length) ? 'block' : 'none';
   }
 
   function scoreColor(score) {
@@ -1090,6 +1192,7 @@
     clearInterval(pollInterval);
     currentJobId = null;
     files = { pitch: null, fin: null, bio: null };
+    statusFetchFailures = 0;
     doneSteps = new Set();
     progressPct = 10;
     ['pitch-filename','fin-filename','bio-filename'].forEach(id => document.getElementById(id).textContent = '');
