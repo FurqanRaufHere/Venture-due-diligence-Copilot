@@ -1,0 +1,23 @@
+[build]
+  publish = "."
+  command = "echo 'Static site deploy'"
+
+# Proxy frontend API calls to Render backend.
+# Replace YOUR-RENDER-SERVICE with your real Render service hostname.
+[[redirects]]
+  from = "/api/*"
+  to = "https://venture-due-diligence-copilot.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/health"
+  to = "https://venture-due-diligence-copilot.onrender.com/health"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/docs"
+  to = "https://venture-due-diligence-copilot.onrender.com/docs"
+  status = 200
+  force = true
