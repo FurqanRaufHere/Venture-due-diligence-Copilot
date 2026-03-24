@@ -4,12 +4,14 @@ services:
     env: python
     plan: free
     healthCheckPath: /health
+
     buildCommand: >
       pip install fastapi uvicorn python-multipart pypdf pdfplumber pandas
       openpyxl python-dotenv "sqlalchemy>=2.0.36" pydantic httpx groq
-      sentence-transformers faiss-cpu reportlab numpy psycopg2-binary &&
-      python -m utils.startup_dataset
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+      sentence-transformers faiss-cpu reportlab numpy psycopg2-binary
+
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+
     envVars:
       - key: GROQ_API_KEY
         sync: false
