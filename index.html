@@ -712,6 +712,10 @@
 </div>
 
 <script>
+  // For standalone Netlify deployment (uploading only index.html), set this to your Render backend URL.
+  // Example: const HOSTED_API_BASE = 'https://ai-vdd-copilot-abc123.onrender.com';
+  const HOSTED_API_BASE = 'https://venture-due-diligence-copilot.onrender.com';
+
   function resolveApiBase() {
     const qs = new URLSearchParams(window.location.search);
     const queryOverride = qs.get('apiBase');
@@ -724,7 +728,12 @@
       return 'http://127.0.0.1:8000';
     }
 
-    // On Netlify or any hosted frontend, use same-origin and rely on proxy rewrites.
+    // Hosted frontend mode:
+    // 1) If HOSTED_API_BASE is configured, call Render directly.
+    // 2) Otherwise fallback to same-origin /api (requires Netlify proxy config).
+    if (!HOSTED_API_BASE.includes('YOUR-RENDER-SERVICE')) {
+      return HOSTED_API_BASE.replace(/\/$/, '');
+    }
     return '';
   }
 
@@ -740,7 +749,20 @@
   let files = { pitch: null, fin: null, bio: null };
   let statusFetchFailures = 0;
 
+  async function fetchWithTimeout(url, options = {}, timeoutMs = 180000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   function toUserFacingError(err, fallbackMsg) {
+    if (err && err.name === 'AbortError') {
+      return `Upload timed out after waiting for backend at ${API_LABEL}. On Render free tier, first request can be slow. Try again, and keep pitch deck under ~15MB if possible.`;
+    }
     if (err && err.name === 'TypeError' && /fetch/i.test(err.message || '')) {
       return `Failed to connect to backend at ${API_LABEL}. If deployed, ensure Netlify proxy and Render API URL are configured correctly.`;
     }
@@ -780,9 +802,17 @@
     try {
       advanceStep('parse', 'active');
       updateProgressBar(10);
+      document.getElementById('progress-current-step').textContent = 'Uploading files to backend...';
 
-      const res = await fetch(apiUrl('/api/upload'), { method: 'POST', body: fd });
-      if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+      const res = await fetchWithTimeout(
+        apiUrl('/api/upload'),
+        { method: 'POST', body: fd },
+        180000
+      );
+      if (!res.ok) {
+        const detail = await res.text();
+        throw new Error(`Upload failed: ${res.status}${detail ? ` - ${detail}` : ''}`);
+      }
       const data = await res.json();
       currentJobId = data.job_id;
       advanceStep('parse', 'done');
