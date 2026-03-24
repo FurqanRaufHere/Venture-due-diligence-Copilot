@@ -1,5 +1,6 @@
 import os
 import logging
+import tempfile
 import threading
 from pathlib import Path
 
@@ -66,18 +67,16 @@ async def startup_event():
     """
     Runs once when the server starts.
 
-    IMPORTANT: This must be fast and non-blocking.
-    Render kills the server if no port is bound within ~30 seconds.
+    IMPORTANT: Keep startup fast and non-blocking.
 
     What we do here:
       1. Create DB tables (instant)
       2. Create upload/report directories (instant)
       3. Start FAISS preload in a background thread (non-blocking)
-         The FAISS index was already BUILT during the render.yaml
-         build command — we're just loading it into RAM here.
+                 The FAISS index is expected to be pre-built; we load it into RAM here.
 
     What we do NOT do here:
-      - Build the FAISS index (takes 30-60s — do this at build time)
+            - Build the FAISS index (takes 30-60s; do this before runtime)
       - Download the embedding model (same reason)
     """
     # 1. DB tables
@@ -85,10 +84,13 @@ async def startup_event():
     logger.info("Database tables created/verified.")
 
     # 2. Directories
-    upload_dir = os.getenv("UPLOAD_DIR", "/tmp/uploads")
+    upload_dir = os.getenv("UPLOAD_DIR", os.path.join(tempfile.gettempdir(), "nlp_uploads"))
     Path(upload_dir).mkdir(parents=True, exist_ok=True)
-    Path("/tmp/reports").mkdir(exist_ok=True)
-    logger.info(f"Directories ready: {upload_dir}, /tmp/reports")
+    
+    reports_dir = os.getenv("REPORTS_DIR", os.path.join(tempfile.gettempdir(), "nlp_reports"))
+    Path(reports_dir).mkdir(parents=True, exist_ok=True)
+    
+    logger.info(f"Directories ready: {upload_dir}, {reports_dir}")
 
     # 3. Preload FAISS in background — does NOT block port binding
     threading.Thread(target=preload_faiss, daemon=True).start()
