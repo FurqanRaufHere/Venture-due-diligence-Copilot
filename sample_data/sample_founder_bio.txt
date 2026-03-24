@@ -1,0 +1,97 @@
+FOUNDER PROFILES — SupplyMind AI
+=====================================
+
+CEO & CO-FOUNDER: SARAH CHEN
+─────────────────────────────
+Background:
+Sarah brings 10 years of experience at the intersection of enterprise software and supply chain operations. She previously served as VP of Product at Flexport, the digital freight startup valued at $3.2B, where she led the development of their real-time shipment visibility platform used by 10,000+ importers and exporters.
+
+Prior to Flexport, Sarah co-founded DataSync, a supply chain analytics company focused on predictive inventory management for mid-market distributors. DataSync was acquired by Oracle in 2021 for $28 million after growing to $4.2M ARR and 47 customers in 3 years.
+
+Earlier career: Product Manager at SAP's supply chain division, where she managed the SMB segment and developed deep frustration with the inaccessibility of enterprise tools for smaller manufacturers — the insight that led to SupplyMind AI.
+
+Education:
+- MBA, The Wharton School, University of Pennsylvania (2014)
+- BS Computer Science, Massachusetts Institute of Technology (2010)
+
+Key credentials:
+- Prior successful exit: DataSync acquired by Oracle, 2021 ($28M)
+- Led product teams of 25+ engineers and PMs
+- Named to Forbes 30 Under 30 (Enterprise Technology, 2019)
+- 3 patents in supply chain optimization algorithms
+- Angel investor in 6 early-stage B2B SaaS companies
+
+
+CTO & CO-FOUNDER: JAMES RODRIGUEZ
+────────────────────────────────────
+Background:
+James is a world-class distributed systems engineer with 12 years of experience building mission-critical infrastructure. At Stripe, he served as Senior Staff Engineer and led the team that rebuilt the core payment processing infrastructure, handling $2B+ in transactions per year with 99.999% uptime.
+
+Before Stripe, James spent 6 years at Google working on Google Cloud's data pipeline infrastructure (Dataflow), building systems that process petabytes of data daily. He was a key contributor to Apache Beam (open source, 6,200+ GitHub stars).
+
+At SupplyMind AI, James architected the real-time data ingestion system processing supplier data from 50,000+ global sources, and the ML prediction engine delivering the platform's 94% demand forecast accuracy.
+
+Education:
+- MS Computer Science (Machine Learning), Stanford University (2013)
+- BS Computer Engineering, UC Berkeley (2011)
+
+Key credentials:
+- 12 years senior engineering experience at tier-1 tech companies
+- Domain expert: distributed systems, real-time ML pipelines, data infrastructure
+- Open source contributor: Apache Beam (6,200 GitHub stars)
+- 4 patents in distributed data processing
+- Speaker: AWS re:Invent 2022 (Real-time ML in Production), QCon 2023
+
+
+VP SALES: MICHAEL THOMPSON
+────────────────────────────
+Background:
+Michael is a seasoned enterprise B2B sales leader with 15 years of experience selling complex software to manufacturing and logistics companies. At Palantir Technologies, he spent 7 years as a Senior Account Executive and later Regional Sales Director, closing $67M in total contract value with customers including Airbus, Caterpillar, and General Dynamics.
+
+Prior to Palantir, Michael held quota-carrying roles at Oracle (ERP division) and IBM (supply chain consulting), giving him firsthand knowledge of the competitor landscape and strong executive relationships across the manufacturing sector.
+
+At SupplyMind AI, Michael built the sales playbook from scratch, hired the first 4 AEs, and personally closed the company's first 15 enterprise accounts. He is responsible for the team's $63,000 average ACV and 7-month payback period.
+
+Education:
+- BS Business Administration, University of Michigan (Ross School) (2009)
+- Certified: MEDDPICC Sales Methodology, Challenger Sale
+
+Key credentials:
+- $67M lifetime enterprise software sales
+- Deep network: C-suite relationships at 200+ mid-market manufacturers
+- Built 3 enterprise sales teams from 0 to $20M+ ARR
+- Specialization: manufacturing, logistics, and supply chain verticals
+
+
+VP CUSTOMER SUCCESS: PRIYA PATEL
+──────────────────────────────────
+Background:
+Priya brings rare domain credibility to SupplyMind AI — she was a supply chain practitioner before becoming a software executive. She spent 8 years in supply chain operations at Caterpillar and GE, where she led a supply chain transformation initiative that reduced costs by $45M and cut average supplier lead time by 22%.
+
+This operational background gives her unmatched credibility with customers who are skeptical of software vendors that don't understand manufacturing realities. Her team maintains a 94% customer retention rate and is responsible for the company's 124% Net Revenue Retention.
+
+Education:
+- MBA, Kellogg School of Management, Northwestern University (2016)
+- BS Industrial Engineering, Purdue University (2012)
+- APICS CSCP (Certified Supply Chain Professional)
+
+Key credentials:
+- 8 years hands-on supply chain operations (Caterpillar, GE)
+- Led $45M cost reduction initiative at GE Industrial Division
+- APICS certified — brings practitioner credibility to customer conversations
+- 94% gross revenue retention under her leadership
+
+
+BOARD & ADVISORS
+─────────────────
+David Park — Board Member (Lead Investor, Sequoia Capital)
+- Partner at Sequoia, previously led investments in Flexport, project44, and FourKites
+- Deep expertise in supply chain technology; led SupplyMind AI's Seed and Series A rounds
+
+Jennifer Walsh — Board Advisor
+- Former CEO of E2open (supply chain SaaS, NYSE: ETWO)
+- 20 years supply chain software; available for customer intros and strategic guidance
+
+Robert Kim — Board Advisor
+- Former Chief Supply Chain Officer, Ford Motor Company
+- Provides enterprise customer validation and product feedback from operator perspective
