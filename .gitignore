@@ -10,10 +10,6 @@ nlp/
 data/faiss_index/
 uploads/
 reports/
-*.db
-*.sqlite
-.DS_Store
-.vscode/
 sentence_transformers_cache/
 *.egg-info/
 dist/
