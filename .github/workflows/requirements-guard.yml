@@ -1,0 +1,21 @@
+name: Guard Netlify Requirements
+
+on:
+  pull_request:
+    paths:
+      - requirements.txt
+      - .github/workflows/requirements-guard.yml
+  push:
+    branches:
+      - main
+    paths:
+      - requirements.txt
+      - .github/workflows/requirements-guard.yml
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Block backend or ML deps in requirements.txt
+        run: "! grep -Eiq '(^|[[:space:]])(fastapi|uvicorn|sqlalchemy|psycopg2-binary|psycopg2|pandas|numpy|scipy|scikit-learn|faiss-cpu|sentence-transformers|torch|transformers|tokenizers|huggingface_hub)([<=>~]|$)' requirements.txt"

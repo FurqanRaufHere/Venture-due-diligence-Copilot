@@ -1,3 +1,6 @@
+# Backend dependency lockfile.
+# Do not copy these entries into requirements.txt.
+# requirements.txt must stay lightweight for Netlify static frontend builds.
 annotated-types==0.7.0
 anyio==4.12.1
 certifi==2026.2.25
