@@ -1,0 +1,193 @@
+{
+  "total": 12,
+  "correct": 11,
+  "accuracy_pct": 91.7,
+  "false_positive_rate_pct": 0.0,
+  "false_negative_rate_pct": 0.0,
+  "calibration_passed": true,
+  "results": [
+    {
+      "name": "Theranos",
+      "expected_outcome": "failed",
+      "expected_grades": [
+        "D",
+        "F"
+      ],
+      "predicted_grade": "D",
+      "risk_score": 66.3,
+      "pattern_risk": 98.2,
+      "failed_sim": 96.5,
+      "success_sim": 0.0,
+      "dominant_archetype": "fraud",
+      "is_correct": true
+    },
+    {
+      "name": "Quibi",
+      "expected_outcome": "failed",
+      "expected_grades": [
+        "C",
+        "D",
+        "F"
+      ],
+      "predicted_grade": "C",
+      "risk_score": 54.4,
+      "pattern_risk": 68.6,
+      "failed_sim": 68.8,
+      "success_sim": 52.8,
+      "dominant_archetype": "premature_scaling",
+      "is_correct": true
+    },
+    {
+      "name": "Juicero",
+      "expected_outcome": "failed",
+      "expected_grades": [
+        "C",
+        "D",
+        "F"
+      ],
+      "predicted_grade": "C",
+      "risk_score": 52.5,
+      "pattern_risk": 86.2,
+      "failed_sim": 72.4,
+      "success_sim": 0.0,
+      "dominant_archetype": "no_product_market_fit",
+      "is_correct": true
+    },
+    {
+      "name": "MoviePass",
+      "expected_outcome": "failed",
+      "expected_grades": [
+        "D",
+        "F"
+      ],
+      "predicted_grade": "C",
+      "risk_score": 57.6,
+      "pattern_risk": 98.9,
+      "failed_sim": 97.8,
+      "success_sim": 0.0,
+      "dominant_archetype": "unit_economics",
+      "is_correct": false
+    },
+    {
+      "name": "Webvan",
+      "expected_outcome": "failed",
+      "expected_grades": [
+        "C",
+        "D",
+        "F"
+      ],
+      "predicted_grade": "C",
+      "risk_score": 54.1,
+      "pattern_risk": 67.7,
+      "failed_sim": 71.3,
+      "success_sim": 60.0,
+      "dominant_archetype": "unit_economics",
+      "is_correct": true
+    },
+    {
+      "name": "Zenefits",
+      "expected_outcome": "failed",
+      "expected_grades": [
+        "C",
+        "D"
+      ],
+      "predicted_grade": "C",
+      "risk_score": 49.5,
+      "pattern_risk": 78.7,
+      "failed_sim": 85.6,
+      "success_sim": 47.1,
+      "dominant_archetype": "founder_issues",
+      "is_correct": true
+    },
+    {
+      "name": "Stripe",
+      "expected_outcome": "success",
+      "expected_grades": [
+        "A",
+        "B"
+      ],
+      "predicted_grade": "B",
+      "risk_score": 21.2,
+      "pattern_risk": 53.0,
+      "failed_sim": 47.9,
+      "success_sim": 69.7,
+      "dominant_archetype": null,
+      "is_correct": true
+    },
+    {
+      "name": "Airbnb",
+      "expected_outcome": "success",
+      "expected_grades": [
+        "A",
+        "B"
+      ],
+      "predicted_grade": "B",
+      "risk_score": 22.1,
+      "pattern_risk": 55.2,
+      "failed_sim": 49.5,
+      "success_sim": 65.3,
+      "dominant_archetype": null,
+      "is_correct": true
+    },
+    {
+      "name": "Shopify",
+      "expected_outcome": "success",
+      "expected_grades": [
+        "A",
+        "B"
+      ],
+      "predicted_grade": "B",
+      "risk_score": 22.7,
+      "pattern_risk": 56.8,
+      "failed_sim": 54.2,
+      "success_sim": 67.7,
+      "dominant_archetype": null,
+      "is_correct": true
+    },
+    {
+      "name": "Zoom",
+      "expected_outcome": "success",
+      "expected_grades": [
+        "A",
+        "B"
+      ],
+      "predicted_grade": "B",
+      "risk_score": 22.0,
+      "pattern_risk": 55.0,
+      "failed_sim": 56.0,
+      "success_sim": 76.7,
+      "dominant_archetype": "premature_scaling",
+      "is_correct": true
+    },
+    {
+      "name": "Notion",
+      "expected_outcome": "success",
+      "expected_grades": [
+        "A",
+        "B"
+      ],
+      "predicted_grade": "A",
+      "risk_score": 11.7,
+      "pattern_risk": 29.2,
+      "failed_sim": 0.0,
+      "success_sim": 69.4,
+      "dominant_archetype": null,
+      "is_correct": true
+    },
+    {
+      "name": "Figma",
+      "expected_outcome": "success",
+      "expected_grades": [
+        "A",
+        "B"
+      ],
+      "predicted_grade": "A",
+      "risk_score": 10.7,
+      "pattern_risk": 26.7,
+      "failed_sim": 0.0,
+      "success_sim": 77.6,
+      "dominant_archetype": null,
+      "is_correct": true
+    }
+  ]
+}
