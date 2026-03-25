@@ -21,6 +21,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+def _env_flag(name: str, default: bool) -> bool:
+    """Parse a boolean env flag with common truthy values."""
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
 app = FastAPI(
     title="AI Venture Due Diligence Copilot",
     description="""
@@ -92,9 +100,13 @@ async def startup_event():
     
     logger.info(f"Directories ready: {upload_dir}, {reports_dir}")
 
-    # 3. Preload FAISS in background — does NOT block port binding
-    threading.Thread(target=preload_faiss, daemon=True).start()
-    logger.info("Server startup complete. FAISS preloading in background thread.")
+    # 3. Optional FAISS preload in background — does NOT block port binding
+    preload_on_startup = _env_flag("PRELOAD_FAISS_ON_STARTUP", True)
+    if preload_on_startup:
+        threading.Thread(target=preload_faiss, daemon=True).start()
+        logger.info("Server startup complete. FAISS preloading in background thread.")
+    else:
+        logger.info("Server startup complete. FAISS preload disabled by PRELOAD_FAISS_ON_STARTUP.")
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
