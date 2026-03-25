@@ -70,7 +70,7 @@ python -m venv venv
 source venv/bin/activate      # Windows: venv\Scripts\activate
 
 # 3. Install dependencies
-pip install -r requirements.txt
+pip install -r requirements-backend.txt
 
 # 4. Configure environment
 cp .env.example .env
@@ -196,6 +196,11 @@ This project is now structured to support:
 - Backend API on Render
 - Static frontend on Netlify
 - Frontend calls `/api/*` and Netlify proxies that path to Render
+
+Dependency split for deployment:
+
+- `requirements.txt` is intentionally minimal for Netlify Git-based static frontend deploys.
+- `requirements-backend.txt` contains full backend dependencies for local backend runs and backend hosting platforms.
 
 ### 1. Prepare Backend for Render
 
