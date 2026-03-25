@@ -712,7 +712,7 @@
 </div>
 
 <script>
-  // For standalone Netlify deployment (uploading only index.html), set this to your Render backend URL.
+  // For hosted frontend deployment, set this to your Render backend URL.
   // Example: const HOSTED_API_BASE = 'https://ai-vdd-copilot-abc123.onrender.com';
   const HOSTED_API_BASE = 'https://venture-due-diligence-copilot.onrender.com';
 
@@ -741,13 +741,7 @@
   const API_LABEL = API || `${window.location.origin}/api (proxied)`;
 
   function apiUrl(path) {
-    // In Netlify, all /api/* calls are proxied to Render via netlify.toml
-    // No need to prepend a base URL—just return the path as-is
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      // Local development: direct to http://127.0.0.1:8000
-      return `http://127.0.0.1:8000${path}`;
-    }
-    // Netlify/production: use relative path (netlify.toml will proxy to Render)
+    if (API) return `${API}${path}`;
     return path;
   }
 

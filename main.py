@@ -29,6 +29,12 @@ def _env_flag(name: str, default: bool) -> bool:
         return default
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
+
+def _env_list(name: str, default_csv: str) -> list[str]:
+    """Parse a comma-separated env var into a cleaned string list."""
+    raw = os.getenv(name, default_csv)
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
 app = FastAPI(
     title="AI Venture Due Diligence Copilot",
     description="""
@@ -60,9 +66,16 @@ v2.0 — All 4 phases complete.
 )
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
+cors_origins = _env_list(
+    "FRONTEND_ORIGINS",
+    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5500,http://127.0.0.1:5500",
+)
+cors_origin_regex = os.getenv("FRONTEND_ORIGIN_REGEX", r"https://.*\\.onrender\\.com")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
+    allow_origin_regex=cors_origin_regex,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],

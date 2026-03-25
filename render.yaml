@@ -5,10 +5,7 @@ services:
     plan: free
     healthCheckPath: /health
 
-    buildCommand: >
-      pip install fastapi uvicorn python-multipart pypdf pdfplumber pandas
-      openpyxl python-dotenv "sqlalchemy>=2.0.36" pydantic httpx groq
-      sentence-transformers faiss-cpu reportlab numpy psycopg2-binary
+    buildCommand: pip install -r requirements-backend.txt
 
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
 
@@ -25,3 +22,13 @@ services:
         value: /tmp/reports
       - key: PRELOAD_FAISS_ON_STARTUP
         value: "false"
+      - key: FRONTEND_ORIGIN_REGEX
+        value: https://.*\.onrender\.com
+
+  - type: static
+    name: ai-vdd-frontend
+    staticPublishPath: .
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
